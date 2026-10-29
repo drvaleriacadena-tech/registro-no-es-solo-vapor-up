@@ -814,9 +814,13 @@ $('registrationForm').addEventListener('submit',async e=>{
    const folio=await res.json();
    if(typeof folio!=='string'||!/^\d{3,}$/.test(folio))throw Error('El servidor no devolvió un folio válido.');
    $('showFolio').textContent=folio;$('showSummary').textContent=nombre+' · '+p+' · '+(activity==='Ambas'?'Plática y estaciones':activity==='Plática'?'Plática':'Estaciones');
-   const advice=healthAdvice(p,healthAnswers);
-   $('healthResult').textContent='Orientación preventiva · '+advice[0]+': '+advice[1]+' Esta orientación se basa únicamente en respuestas autodeclaradas y no es una escala clínica validada, diagnóstico ni evaluación de la función pulmonar.';
-   if(healthAnswers.tabaquismo_alguna_vez==='Sí')$('healthResult').textContent+=' Índice tabáquico estimado: '+healthAnswers.indice_tabaquico_paquetes_anio.toFixed(2)+' paquetes-año. Este índice mide exposición acumulada al cigarrillo, no el daño pulmonar ni el riesgo individual.';
+   const indice=healthAnswers.tabaquismo_alguna_vez==='Sí'&&Number.isFinite(healthAnswers.indice_tabaquico_paquetes_anio)?healthAnswers.indice_tabaquico_paquetes_anio.toFixed(2)+' paquetes-año':'No aplica';
+   $('healthResult').replaceChildren();
+   const indiceLine=document.createElement('div');indiceLine.style.cssText='font-size:19px;margin-bottom:10px';
+   const indiceTitle=document.createElement('strong');indiceTitle.textContent='Índice tabáquico estimado: ';indiceLine.append(indiceTitle,document.createTextNode(indice));
+   const motto=document.createElement('p');motto.style.cssText='margin:0;font-size:17px;line-height:1.55';
+   motto.textContent='No es solo vapor: cada decisión cuenta. Cuidar tus pulmones hoy es respirar mejor mañana.';
+   $('healthResult').append(indiceLine,motto);
    try{
     const surveyResponse=await fetch(DB+'/rest/v1/vapor_encuesta_anonima_2026',{method:'POST',headers:{apikey:KEY,'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify({perfil:p==='Alumno'?'Alumno':p==='Colaborador'?'Colaborador':'General',respuestas:healthAnswers,consentimiento:true})});
     if(!surveyResponse.ok)throw Error('Error al guardar respuestas');
