@@ -705,7 +705,7 @@ body.print-epi #epiPrint .rp-signature{padding:18px 0}
 </div>
 <div class="modal-bg" hidden="" id="editOverlay"><div aria-labelledby="editTitle" aria-modal="true" class="modal" role="dialog"><h2 id="editTitle">Editar inscripción</h2><form id="editForm"><div class="fields"><div class="field full"><label for="editName">Nombre completo</label><input id="editName" maxlength="120" required=""/></div><div class="field full"><label for="editEmail">Correo</label><input id="editEmail" maxlength="160" required="" type="email"/></div><div class="field"><label for="editProfile">Perfil</label><select id="editProfile"><option>Alumno</option><option>Colaborador</option><option>Alumni</option><option>Jubilado</option><option>Familiar</option><option>Externo</option></select></div><div class="field"><label for="editActivity">Actividad</label><select id="editActivity"><option value="Plática">Plática</option><option value="Recorrido">Recorrido</option><option value="Ambas">Ambas</option></select></div></div><p class="alert error" hidden="" id="editStatus"></p><div class="modal-footer"><button class="secondary" id="cancelEdit" type="button">Cancelar</button><button class="primary" type="submit">Guardar cambios</button></div></form></div></div>
 <div aria-hidden="true" id="epiPrint"></div>
-<script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script><script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
 <script>
 'use strict';
 // Clave pública de Supabase, protegida mediante políticas RLS; nunca usar una clave de servicio aquí.
@@ -873,28 +873,46 @@ $('registrationForm').addEventListener('submit',async e=>{
 });
 
 async function downloadReceiptPDF(data){
- if(!window.PDFLib)throw new Error('No se pudo cargar el generador PDF. Comprueba tu conexión a internet.');
- const {PDFDocument,StandardFonts,rgb}=PDFLib,doc=await PDFDocument.create();
- const page=doc.addPage([595.28,841.89]);const font=await doc.embedFont(StandardFonts.Helvetica),bold=await doc.embedFont(StandardFonts.HelveticaBold);
- const dark=rgb(.17,.24,.19),olive=rgb(.28,.35,.26),gray=rgb(.43,.46,.42),white=rgb(1,1,1);
- const clean=v=>String(v??'').replace(/[\r\n\t]+/g,' ').replace(/[\u2013\u2014]/g,'-').replace(/[\u2018\u2019]/g,"'").replace(/[\u201c\u201d]/g,'"').slice(0,240);
- const line=(text,x,y,size=12,f=font,color=dark)=>page.drawText(clean(text),{x,y,size,font:f,color,maxWidth:480});
- page.drawRectangle({x:0,y:718,width:595.28,height:124,color:olive});
- line('UNIVERSIDAD PANAMERICANA',48,795,16,bold,white);
- line('SALUD Y BIENESTAR | CAMPANA NO ES SOLO VAPOR',48,770,10,font,white);
- line('17 DE NOVIEMBRE DE 2026',48,747,11,font,white);
- line('Comprobante de inscripcion',48,676,25,bold,dark);
- line('Tu salud, tu momento para decidir.',48,650,12,font,gray);
- page.drawRectangle({x:45,y:529,width:505,height:95,color:rgb(.94,.96,.91),borderColor:rgb(.82,.86,.79),borderWidth:1});
- line('FOLIO DE REGISTRO',65,596,11,bold,olive);
- line(data.folio,65,549,35,bold,olive);
- const fields=[['Participante',data.nombre],['Perfil',data.perfil],['Actividad',data.actividad],['Estado',data.estado||'Inscripcion registrada']];
- fields.forEach(([key,value],i)=>{const y=482-i*49;line(key+':',48,y,12,bold,dark);line(value,175,y,12,font,dark);page.drawLine({start:{x:48,y:y-15},end:{x:548,y:y-15},thickness:.6,color:rgb(.86,.87,.83)})});
- line('Este comprobante acredita el registro en la jornada, no la asistencia.',48,230,10,font,gray);
- line('No es un diagnostico, resultado de espirometria ni constancia clinica.',48,213,10,font,gray);
- line('UNIVERSIDAD PANAMERICANA | MEDICINA DE CAMPUS',48,75,9,bold,olive);
- const bytes=await doc.save(),blob=new Blob([bytes],{type:'application/pdf'}),url=URL.createObjectURL(blob),a=document.createElement('a');
- a.href=url;a.download='Comprobante_No_es_solo_vapor_'+clean(data.folio).replace(/[^a-zA-Z0-9_-]/g,'')+'.pdf';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),15000);
+ if(!window.html2canvas||!window.jspdf?.jsPDF)throw new Error('No se cargó el generador del comprobante. Revisa la conexión a internet.');
+ const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;':'&quot;',"'":'&#39;'}[c])).slice(0,180);
+ const logo=selector=>document.querySelector(selector)?.getAttribute('src')||'';
+ const logoUP=logo('.logo-institucion'),logoSalud=logo('.logo-salud'),logoAbraza=logo('.logo-abraza-header');
+ const item=(title,value)=>'<div style="display:grid;grid-template-columns:155px 1fr;align-items:center;border-bottom:1px solid #d9ded4;padding:14px 5px"><div style="font:700 12px Arial,sans-serif;letter-spacing:2px;color:#5a6659">'+title+'</div><div style="font:18px Georgia,serif;color:#203e34;overflow-wrap:anywhere">'+esc(value)+'</div></div>';
+ const node=document.createElement('div');node.setAttribute('aria-hidden','true');node.style.cssText='position:fixed;top:0;left:-15000px;width:794px;height:1123px;background:white;box-sizing:border-box;padding:44px 48px;color:#173c31;font-family:Georgia,serif;z-index:-1';
+ node.innerHTML=`
+ <div style="display:flex;justify-content:space-between;align-items:center;gap:18px;min-height:84px">
+ <img src="${logoUP}" alt="Universidad Panamericana" style="max-width:260px;max-height:75px;object-fit:contain">
+ <img src="${logoSalud}" alt="Salud y Bienestar" style="max-width:180px;max-height:75px;object-fit:contain">
+ <img src="${logoAbraza}" alt="Abraza tu Mente" style="max-width:125px;max-height:65px;object-fit:contain">
+ </div>
+ <div style="height:2px;background:#b99b67;margin:15px 0 31px"></div>
+ <div style="text-align:center;font:12px Arial,sans-serif;letter-spacing:3px;color:#647666">CAMPAÑA UNIVERSITARIA DE SALUD RESPIRATORIA</div>
+ <div style="text-align:center;font:italic 53px Georgia,serif;margin:17px 0 4px">No es solo <span style="color:#71866c">vapor</span></div>
+ <div style="text-align:center;font:12px Arial,sans-serif;letter-spacing:4px;color:#617663">INFORMAR · PREVENIR · RESPIRAR MEJOR</div>
+ <h1 style="font:44px Georgia,serif;text-align:center;margin:38px 0 25px;color:#153c30">Comprobante de inscripción</h1>
+ <div style="border:2px solid #bda16c;border-radius:16px;background:#f1f4ed;display:flex;justify-content:center;align-items:center;gap:32px;width:350px;margin:0 auto 30px;padding:18px"><span style="font:13px Arial,sans-serif;letter-spacing:3px">FOLIO</span><span style="font:700 43px Georgia,serif">${esc(data.folio)}</span></div>
+ <div style="margin:0 26px">
+ ${item('PARTICIPANTE',data.nombre)}
+ ${item('PERFIL',data.perfil)}
+ ${item('ACTIVIDAD',data.actividad==='Ambas'?'Plática y estaciones':data.actividad==='Recorrido'?'Estaciones interactivas':data.actividad)}
+ ${item('FECHA','17 de noviembre de 2026')}
+ ${item('CAMPUS','Guadalajara')}
+ ${item('HORARIO','10:00 a 14:00 h')}
+ </div>
+ <div style="margin:35px 3px 22px;background:#eff2e9;border-radius:14px;padding:24px 20px;text-align:center">
+ <div style="font:italic 23px Georgia,serif;color:#254c3a">No es solo vapor: cada decisión cuenta.</div>
+ <div style="font:16px Georgia,serif;margin-top:10px">Cuidar tus pulmones hoy es respirar mejor mañana.</div>
+ </div>
+ <div style="text-align:center;color:#566c59;font:14px Arial,sans-serif">Gracias por formar parte de esta jornada de salud respiratoria.</div>
+ <div style="position:absolute;bottom:38px;left:48px;right:48px;text-align:center;border-top:1px solid #b99b67;padding-top:16px;font:11px Arial,sans-serif;color:#607268">UNIVERSIDAD PANAMERICANA · SALUD Y BIENESTAR · ABRAZA TU MENTE<br><span style="display:block;margin-top:6px">Este comprobante acredita la inscripción, no la asistencia ni una valoración clínica.</span></div>`;
+ document.body.appendChild(node);
+ try{
+  await Promise.all([...node.querySelectorAll('img')].map(img=>new Promise(resolve=>{if(img.complete)return resolve();img.onload=resolve;img.onerror=resolve;})));
+  const canvas=await html2canvas(node,{scale:1.8,backgroundColor:'#fff',useCORS:true,logging:false});
+  const pdf=new window.jspdf.jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+  pdf.addImage(canvas.toDataURL('image/jpeg',0.92),'JPEG',0,0,210,297);
+  pdf.save('Comprobante_No_es_solo_vapor_'+String(data.folio).replace(/[^a-zA-Z0-9_-]/g,'')+'.pdf');
+ } finally{node.remove();}
 }
 $('printConfirm').onclick=async()=>{const button=$('printConfirm');button.disabled=true;try{await downloadReceiptPDF({folio:$('showFolio').textContent,nombre:$('nombre').value.trim(),perfil:currentProfile(),actividad:document.querySelector('input[name="actividad"]:checked')?.value||'Ambas',estado:'Inscripcion registrada'})}catch(e){alert(e.message)}finally{button.disabled=false}};$('newRegister').onclick=()=>{$('registrationForm').reset();document.querySelectorAll('input[name="perfil"]').forEach(x=>x.checked=false);profileUpdate();$('formArea').hidden=false;$('successView').hidden=true;displayWizard(0);notification('formStatus','');$('healthResult').textContent='';$('nombre').focus();};
 async function adminFetch(path,options={}){
