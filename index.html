@@ -805,6 +805,7 @@ function profileUpdate(){
 document.querySelectorAll('input[name="perfil"]').forEach(x=>x.onchange=profileUpdate);
 profileUpdate();
 
+let tobaccoSummary=null;
 let wizardStep=0;
 const wizardNames=['Perfil de participante','Datos personales','Actividades','Salud respiratoria','Índice tabáquico'];
 function yearsOld(iso){if(!iso)return null;const d=new Date(iso+'T12:00:00'),now=new Date();if(!Number.isFinite(d.getTime())||d>now)return null;let age=now.getFullYear()-d.getFullYear();if(now.getMonth()<d.getMonth()||(now.getMonth()===d.getMonth()&&now.getDate()<d.getDate()))age--;return age;}
@@ -1067,7 +1068,9 @@ async function refreshTobaccoStats(){
  try{
  let data=[],offset=0;while(true){const batch=await adminFetch('/rest/v1/vapor_encuesta_anonima_2026?select=perfil,respuestas&limit=500&offset='+offset);data.push(...batch);if(batch.length<500)break;offset+=500;if(offset>=100000)break;}
  const yes=data.filter(x=>x.respuestas?.tabaquismo_alguna_vez==='Sí');
- const valid=yes.map(x=>Number(x.respuestas?.indice_tabaquico_paquetes_anio)).filter((v,i)=>Number.isFinite(v)&&v>=0&&yes[i]?.respuestas?.indice_tabaquico_paquetes_anio!==undefined);
+ const valid=yes.filter(x=>x.respuestas?.indice_tabaquico_paquetes_anio!==undefined&&x.respuestas?.indice_tabaquico_paquetes_anio!==null).map(x=>Number(x.respuestas.indice_tabaquico_paquetes_anio)).filter(v=>Number.isFinite(v)&&v>=0);
+ tobaccoSummary={total:data.length,yes:yes.length,valid:valid.slice()};
+ if(!$('console-reporte').hidden)renderEpiPreview();
  const bands=[['Menos de 5',0,5],['5 a menos de 10',5,10],['10 a menos de 20',10,20],['20 o más',20,Infinity]];
  const boxes=[['Encuestas recibidas',data.length],['Antecedente declarado de tabaquismo',yes.length],['Índice calculable',valid.length],['Sin índice calculable',yes.length-valid.length]];
  boxes.forEach(([label,n])=>{const box=document.createElement('div');box.style.cssText='background:#f1f5ec;border:1px solid #dfe6d8;border-radius:12px;padding:15px';const num=document.createElement('strong');num.style.cssText='font-size:25px;display:block';num.textContent=String(n);const caption=document.createElement('small');caption.textContent=label;box.append(num,caption);stats.append(box);});
@@ -1106,6 +1109,19 @@ $('accountSignout').onclick=()=>{$('signout').click();consoleGo('resumen')};
 function updatePhotoCount(){$('photoCount').textContent=epiPhotos.length+' fotografía'+(epiPhotos.length!==1?'s':'')}
 const photoButton=$('epiUploadBtn');const originalPhotoHandler=photoButton.onclick;photoButton.onclick=async e=>{if(!$('photoConsent').checked){epiMessage('Confirma que cuentas con las autorizaciones correspondientes antes de subir fotografías.');$('photoConsent').focus();return;}await originalPhotoHandler(e);updatePhotoCount();};
 const oldEpiDrawPhotos=epiDrawPhotos;epiDrawPhotos=async function(){await oldEpiDrawPhotos();updatePhotoCount();};
+function demographicHtml(){
+ const ageBands=[['Menores de 18',0,18],['18–24',18,25],['25–34',25,35],['35–44',35,45],['45–54',45,55],['55–64',55,65],['65 o más',65,200]];
+ const ages=rows.map(r=>yearsOld(r.fecha_nacimiento)).filter(v=>v!==null&&v>=0);
+ const ageCounts=ageBands.map(([name,min,max])=>({name,n:ages.filter(v=>v>=min&&v<max).length}));
+ const maxAge=Math.max(1,...ageCounts.map(x=>x.n));
+ const bars=ageCounts.map(x=>'<div class="rp-bar-row"><span>'+x.name+'</span><div class="rp-bar-track"><i style="width:'+(x.n/maxAge*100)+'%"></i></div><strong>'+x.n+'</strong></div>').join('');
+ let tobacco='<p>La distribución de paquetes-año estará disponible cuando se consulten las respuestas de la encuesta.</p>';
+ if(tobaccoSummary){const vals=tobaccoSummary.valid,bands=[['Menos de 5',0,5],['5 a menos de 10',5,10],['10 a menos de 20',10,20],['20 o más',20,Infinity]];
+ const counts=bands.map(([name,min,max])=>({name,n:vals.filter(v=>v>=min&&v<max).length})),mx=Math.max(1,...counts.map(x=>x.n));
+ tobacco='<p><strong>'+tobaccoSummary.total+'</strong> encuestas · <strong>'+tobaccoSummary.yes+'</strong> antecedentes de tabaquismo declarados · <strong>'+vals.length+'</strong> índices calculables.</p>'+counts.map(x=>'<div class="rp-bar-row"><span>'+x.name+' paquetes-año</span><div class="rp-bar-track"><i style="width:'+(x.n/mx*100)+'%"></i></div><strong>'+x.n+'</strong></div>').join('');
+ }
+ return '<section class="rp-block" id="reportDemographics"><div class="rp-section-title"><span>ANÁLISIS DEMOGRÁFICO Y EXPOSICIÓN TABÁQUICA</span></div><h3>Distribución por edad</h3><p>Con fecha de nacimiento: '+ages.length+'; sin fecha: '+(rows.length-ages.length)+'. Denominador: inscripciones con edad calculable.</p>'+bars+'<h3>Índice tabáquico autodeclarado</h3>'+tobacco+'<p class="rp-method-note">Paquetes-año = años de consumo × cigarrillos diarios / 20. Los intervalos describen exposición acumulada, no daño pulmonar. Encuesta de participación voluntaria, no representativa de toda la comunidad universitaria. Los datos de salud no se vinculan a folios ni nombres.</p></section>';
+}
 function renderEpiPreview(){
  const preview=$('reportPreview');if(!preview)return;
  const total=rows.length,attended=rows.filter(x=>x.asistencia_confirmada).length,pending=total-attended;
@@ -1146,7 +1162,7 @@ function renderEpiPreview(){
  +'<section class="rp-block"><div class="rp-section-title"><span>05</span><div><small>LECTURA DE RESULTADOS</small><h2>Hallazgos y valoración epidemiológica</h2></div></div>'+narrative(values.hallazgos,noFindings)+ (values.impacto||values.limitaciones?'<div class="rp-outline-note">'+(values.impacto?'<h3>Impacto y alcance</h3>'+narrative(values.impacto,''):'')+(values.limitaciones?'<h3>Limitaciones</h3>'+narrative(values.limitaciones,''):'')+'</div>':'')+'</section>'
  +'<section class="rp-block"><div class="rp-section-title"><span>06</span><div><small>EVIDENCIA DOCUMENTAL</small><h2>Fotografías de la jornada</h2></div></div><div class="rp-photo-grid">'+imageHtml+'</div></section>'
  +'<section class="rp-block"><div class="rp-section-title"><span>07</span><div><small>CONTINUIDAD PREVENTIVA</small><h2>Conclusiones y recomendaciones</h2></div></div><div class="rp-two"><div><h3>Conclusiones</h3>'+narrative(values.conclusiones,noConclusions)+'</div><div><h3>Recomendaciones</h3>'+narrative(values.recomendaciones,noRecommendations)+'</div></div>'+(values.seguimiento?'<div class="rp-outline-note"><h3>Plan de seguimiento</h3>'+narrative(values.seguimiento,'')+'</div>':'')+'</section>'
- +'<footer class="rp-signature"><span>Elaborado por: <strong>'+safe(author)+'</strong></span><span>Corte de información: '+safe(when)+'</span><small>Documento institucional. Estadísticas agregadas, sin datos personales.</small></footer>';
+ +demographicHtml() +'<footer class="rp-signature"><span>Elaborado por: <strong>'+safe(author)+'</strong></span><span>Corte de información: '+safe(when)+'</span><small>Documento institucional. Estadísticas agregadas, sin datos personales.</small></footer>';
 }
 $('previewRefresh').onclick=renderEpiPreview;
 [...Object.values(EPI_EXTRA), ...Object.values(EPICOLS)].forEach(id=>$(id).addEventListener('input',()=>{if(!$('console-reporte').hidden)renderEpiPreview()}));
