@@ -758,9 +758,21 @@ function drawHealth(p){
  const ph=document.createElement('option');ph.value='';ph.textContent='Selecciona tu respuesta';sel.append(ph);
  options.forEach(v=>{const option=document.createElement('option');option.value=v;option.textContent=v;sel.append(option)});
  container.append(label,sel);root.append(container);
- });$('healthConsent').checked=false;
+ });
+ const tobacco=document.createElement('div');tobacco.style.cssText='margin:16px 0;padding:16px;background:#e8eee3;border:1px solid #c9d4c5;border-radius:14px';
+ tobacco.innerHTML='<h3 style="margin:0 0 8px;font:600 20px Georgia,serif">Índice tabáquico · paquetes-año</h3><p style="font-size:13px;margin:0 0 12px">Esta sección es para quienes han fumado cigarrillos convencionales alguna vez, aunque actualmente ya no fumen. No aplica a vapeadores. Cálculo: años fumados × cigarrillos diarios / 20.</p><label for="h_tobaccoEver" style="display:block;font-weight:650;margin-bottom:8px">¿Has fumado cigarrillos convencionales alguna vez?</label><select id="h_tobaccoEver" name="h_tobaccoEver" required style="width:100%;padding:10px;border-radius:8px"><option value="">Selecciona una respuesta</option><option value="Sí">Sí, actualmente o en el pasado</option><option value="No">Nunca</option><option value="Prefiero no responder">Prefiero no responder</option></select><div id="h_tobaccoDetails" hidden style="padding-top:12px"><label for="h_tobaccoYears" style="display:block;font-weight:650">Años totales en los que fumaste cigarrillos</label><input type="number" min="0.01" max="100" step="0.01" id="h_tobaccoYears" placeholder="Ej. 8" style="width:100%;padding:10px;margin:7px 0 12px;border-radius:8px;border:1px solid #cbd1c5"><label for="h_tobaccoDaily" style="display:block;font-weight:650">Promedio de cigarrillos fumados por día durante ese tiempo</label><input type="number" min="0.01" max="100" step="0.01" id="h_tobaccoDaily" placeholder="Ej. 10" style="width:100%;padding:10px;margin:7px 0 12px;border-radius:8px;border:1px solid #cbd1c5"><div id="h_tobaccoResult" aria-live="polite" style="font-weight:700;color:#354b36">Introduce ambos datos para calcular el índice.</div><p style="font-size:12px;margin-bottom:0">Si tu consumo ha variado mucho, el resultado será aproximado. Si prefieres no declarar las cantidades, utiliza la opción anterior.</p></div>';
+ root.append(tobacco);
+ $('h_tobaccoEver').addEventListener('change',()=>{
+ const yes=$('h_tobaccoEver').value==='Sí';$('h_tobaccoDetails').hidden=!yes;$('h_tobaccoYears').required=yes;$('h_tobaccoDaily').required=yes;if(!yes){$('h_tobaccoYears').value='';$('h_tobaccoDaily').value='';}
+ });
+ const recalc=()=>{const y=Number($('h_tobaccoYears').value),d=Number($('h_tobaccoDaily').value);$('h_tobaccoResult').textContent=y>0&&d>0&&y<=100&&d<=100?'Tu índice tabáquico estimado: '+((y*d)/20).toFixed(2)+' paquetes-año':'Introduce ambos datos para calcular el índice.';};
+ $('h_tobaccoYears').addEventListener('input',recalc);$('h_tobaccoDaily').addEventListener('input',recalc);
+ $('healthConsent').checked=false;
 }
-function getHealthAnswers(p){const out={};for(const [key] of healthQuestions[healthGroup(p)])out[key]=$('h_'+key)?.value||'';return out;}
+function getHealthAnswers(p){const out={};for(const [key] of healthQuestions[healthGroup(p)])out[key]=$('h_'+key)?.value||'';
+ out.tabaquismo_alguna_vez=$('h_tobaccoEver')?.value||'';
+ if(out.tabaquismo_alguna_vez==='Sí'){const years=Number($('h_tobaccoYears').value),daily=Number($('h_tobaccoDaily').value);out.anios_fumando=years;out.cigarrillos_dia=daily;out.indice_tabaquico_paquetes_anio=Number((years*daily/20).toFixed(2));}
+ return out;}
 function healthAdvice(p,a){
  const recent=a.recent||'',frequency=a.frequency||'';
  if(Object.values(a).some(v=>!v||v==='Prefiero no responder'))return ['Información insuficiente','No es posible categorizar tu exposición declarada. Conocer tus hábitos es un primer paso para cuidar tu salud.'];
@@ -803,6 +815,7 @@ $('registrationForm').addEventListener('submit',async e=>{
    $('showFolio').textContent=folio;$('showSummary').textContent=nombre+' · '+p+' · '+(activity==='Ambas'?'Plática y estaciones':activity==='Plática'?'Plática':'Estaciones');
    const advice=healthAdvice(p,healthAnswers);
    $('healthResult').textContent='Orientación preventiva · '+advice[0]+': '+advice[1]+' Esta orientación se basa únicamente en respuestas autodeclaradas y no es una escala clínica validada, diagnóstico ni evaluación de la función pulmonar.';
+   if(healthAnswers.tabaquismo_alguna_vez==='Sí')$('healthResult').textContent+=' Índice tabáquico estimado: '+healthAnswers.indice_tabaquico_paquetes_anio.toFixed(2)+' paquetes-año. Este índice mide exposición acumulada al cigarrillo, no el daño pulmonar ni el riesgo individual.';
    try{
     const surveyResponse=await fetch(DB+'/rest/v1/vapor_encuesta_anonima_2026',{method:'POST',headers:{apikey:KEY,'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify({perfil:p==='Alumno'?'Alumno':p==='Colaborador'?'Colaborador':'General',respuestas:healthAnswers,consentimiento:true})});
     if(!surveyResponse.ok)throw Error('Error al guardar respuestas');
