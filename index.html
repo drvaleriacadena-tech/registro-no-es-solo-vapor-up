@@ -376,7 +376,6 @@ body{background:radial-gradient(ellipse at 90% -10%,rgba(202,190,164,.14),transp
  body.print-epi #epiPrint .report-conclusion h2{border:0;margin-top:4px}
 }
 </style>
-
 <style id="vapor-pages-and-report-styles">
 /* Separate screens, never a long combined public/admin document. */
 body.portal-admin>.shell{max-width:1550px;padding:0 20px 20px}
@@ -468,7 +467,23 @@ body.print-epi #epiPrint .rp-photo-grid{display:grid;grid-template-columns:repea
 body.print-epi #epiPrint .rp-signature{padding:18px 0}
 }
 </style>
-</head>
+<style>
+/* Edición completa del reporte · edición en ventana y vista institucional limpia */
+.report-editor-modal{width:min(980px,96vw)!important;max-height:92vh!important;overflow:auto!important}
+#epiReportSection .epi-grid{display:grid;grid-template-columns:1fr 1fr;gap:15px 18px}
+#epiReportSection .epi-field.wide{grid-column:span 2}
+#epiReportSection .epi-field label{font-size:12px;font-weight:750;color:#435648;letter-spacing:.01em}
+#epiReportSection .epi-field input,#epiReportSection .epi-field textarea{width:100%;font-family:inherit;border:1px solid #d5ded2;border-radius:11px;background:#fcfcfa;padding:12px 14px;line-height:1.6;min-height:46px;font-size:13px;color:#314536}
+#epiReportSection .epi-field textarea{resize:vertical;min-height:98px}
+.epi-form-group-title{grid-column:1/-1;font-size:12px;letter-spacing:.12em;text-transform:uppercase;background:#ecf0e7;color:#415743;font-weight:850;padding:13px 16px;border-radius:10px;margin-top:10px}
+#reportPreview .rp-custom-intro{background:#f7f7f0;border-left:4px solid #8f9c85;border-radius:10px;padding:14px 22px;font-size:13px;line-height:1.75;margin-top:15px}
+#reportPreview .rp-outline-note{padding:14px 18px;border:1px solid #e7e6db;background:#fdfdfb;border-radius:11px;margin-top:15px}
+#reportPreview .rp-outline-note h3{margin-top:0}
+#reportPreview .rp-empty-note{font-size:12px;color:#8f958b;font-style:italic}
+#reportPreview .rp-status-line{font-size:11px;color:#737d71;margin-top:10px}
+@media(max-width:600px){#epiReportSection .epi-grid{grid-template-columns:1fr}#epiReportSection .epi-field.wide{grid-column:span 1}}
+@media print{.report-editor-overlay{display:none!important}.rp-custom-intro,.rp-outline-note{break-inside:avoid}}
+</style></head>
 <body>
 <div class="shell">
 <header aria-label="Organizadores de la campaña" class="topbar topbar-logos-final">
@@ -580,37 +595,31 @@ body.print-epi #epiPrint .rp-signature{padding:18px 0}
 <section class="panel" id="evidenceHolder"><div class="notice-yellow">Usa solo fotografías autorizadas. No incluyas identificaciones, expedientes ni resultados de salud visibles.</div><h3>Evidencia fotográfica</h3><p class="epi-sub">JPG, PNG o WebP · hasta 5 MB por archivo · almacenamiento privado · solo administradores. Evita primeros planos sin autorización.</p><div class="epi-field"><label for="epiUpload">Agregar fotografías del evento</label><input accept="image/jpeg,image/png,image/webp" id="epiUpload" multiple="" type="file"/></div><label class="photo-consent"><input id="photoConsent" type="checkbox"/> Confirmo que tengo autorización institucional para utilizar las fotografías y que no incluyen datos de salud identificables.</label><div class="epi-actions"><button class="secondary" id="epiUploadBtn" type="button">Subir fotografías</button></div><div class="epi-photo-grid" id="epiPhotoGrid"></div><p aria-live="polite" class="epi-report-status" id="epiStatus" role="status"></p></section>
 </section>
 <section class="console-page" hidden="" id="console-reporte">
-  <div class="module-head report-top-head"><div><div class="tinytitle">DOCUMENTO INSTITUCIONAL · SALUD PÚBLICA</div><h3>Reporte epidemiológico de la jornada</h3><p>Informe descriptivo de alcance y participación. Actualizado con los registros del sistema.</p></div><span class="module-chip">Documento, no formulario</span></div>
-  <div class="report-page-actions no-print">
-    <button id="openReportEditor" class="secondary" type="button">✎ Editar observaciones</button>
-    <button id="reportEvidence" class="secondary" type="button">▧ Agregar fotografías</button>
-    <button id="previewRefresh" class="secondary" type="button">↻ Actualizar cifras</button>
-    <button id="reportDownload" class="primary" type="button">⇩ Descargar / imprimir PDF</button>
-  </div>
-  <div class="report-document" id="reportPreview" role="document" aria-label="Informe epidemiológico de la jornada"><div class="report-placeholder">Preparando reporte institucional…</div></div>
-  <div class="report-bottom-note">Los indicadores de participación no permiten estimar prevalencia de tabaquismo ni evaluar diagnósticos. El informe no incluye nombres ni correos de asistentes.</div>
-  <div class="report-editor-overlay" id="reportEditorOverlay" hidden="" role="presentation"><div class="report-editor-modal" role="dialog" aria-modal="true" aria-labelledby="editorTitle"><div class="report-editor-top"><div><small>EDICIÓN PRIVADA</small><h2 id="editorTitle">Información del informe</h2><p>Estos campos se guardan en tu base de datos, sin aparecer como formulario en el reporte.</p></div><button class="secondary" type="button" id="closeReportEditor">Cerrar ✕</button></div>
-  <section class="panel epi-report" id="epiReportSection">
+<div class="module-head report-top-head"><div><div class="tinytitle">DOCUMENTO INSTITUCIONAL · SALUD PÚBLICA</div><h3>Reporte epidemiológico de la jornada</h3><p>Informe descriptivo de alcance y participación. Actualizado con los registros del sistema.</p></div><span class="module-chip">Documento, no formulario</span></div>
+<div class="report-page-actions no-print">
+<button class="secondary" id="openReportEditor" type="button">✎ Editar todas las secciones</button>
+<button class="secondary" id="reportEvidence" type="button">▧ Agregar fotografías</button>
+<button class="secondary" id="previewRefresh" type="button">↻ Actualizar cifras</button>
+<button class="primary" id="reportDownload" type="button">⇩ Descargar / imprimir PDF</button>
+</div>
+<div aria-label="Informe epidemiológico de la jornada" class="report-document" id="reportPreview" role="document"><div class="report-placeholder">Preparando reporte institucional…</div></div>
+<div class="report-bottom-note">Los indicadores de participación no permiten estimar prevalencia de tabaquismo ni evaluar diagnósticos. El informe no incluye nombres ni correos de asistentes.</div>
+<div class="report-editor-overlay" hidden="" id="reportEditorOverlay" role="presentation"><div aria-labelledby="editorTitle" aria-modal="true" class="report-editor-modal" role="dialog"><div class="report-editor-top"><div><small>EDICIÓN PRIVADA</small><h2 id="editorTitle">Editor del reporte epidemiológico</h2><p>Edita el documento por apartados y guarda los cambios. El informe se presenta sin casillas ni campos vacíos.</p></div><button class="secondary" id="closeReportEditor" type="button">Cerrar ✕</button></div>
+<section class="panel epi-report" id="epiReportSection">
 <div class="epi-head"><div><h2>Reporte epidemiológico de la jornada</h2><p class="epi-sub">Informe descriptivo final · 17 de noviembre de 2026 · Solo para administración</p></div></div>
 <div class="epi-note">Las estadísticas se calculan con los registros y asistencias confirmadas. <strong>No equivalen a prevalencia de tabaquismo, vapeo ni diagnóstico pulmonar.</strong> Evita incluir nombres o información clínica en el reporte y sube únicamente fotografías autorizadas.</div>
-<div class="epi-grid">
-<div class="epi-field wide"><label for="epiObjetivo">Objetivo</label><textarea id="epiObjetivo" maxlength="2500"></textarea></div>
-<div class="epi-field wide"><label for="epiMetodologia">Metodología y fuente de información</label><textarea id="epiMetodologia" maxlength="2500"></textarea></div>
-<div class="epi-field wide"><label for="epiActividades">Actividades realizadas</label><textarea id="epiActividades" maxlength="2500"></textarea></div>
-<div class="epi-field wide"><label for="epiHallazgos">Hallazgos principales (sin datos identificables)</label><textarea id="epiHallazgos" maxlength="4000" placeholder="Describe resultados, observaciones y alcances; distingue registros de participantes efectivos."></textarea></div>
-<div class="epi-field wide"><label for="epiConclusiones">Conclusiones</label><textarea id="epiConclusiones" maxlength="4000"></textarea></div>
-<div class="epi-field wide"><label for="epiRecomendaciones">Recomendaciones y seguimiento</label><textarea id="epiRecomendaciones" maxlength="4000"></textarea></div>
+<div class="epi-grid"><div class="epi-form-group-title">01 · Portada y datos generales</div><div class="epi-field wide epi-custom-field"><label for="epiTitulo">Título del informe</label><input id="epiTitulo" maxlength="180" type="text" value="NO ES SOLO VAPOR"/></div><div class="epi-field wide epi-custom-field"><label for="epiSubtitulo">Subtítulo</label><input id="epiSubtitulo" maxlength="180" type="text" value="Informe epidemiológico descriptivo de la jornada"/></div><div class="epi-field wide epi-custom-field"><label for="epiFecha">Fecha de realización</label><input id="epiFecha" maxlength="180" type="text" value="17 de noviembre de 2026"/></div><div class="epi-field wide epi-custom-field"><label for="epiHorario">Horario</label><input id="epiHorario" maxlength="180" type="text" value="10:00 a. m. – 2:00 p. m."/></div><div class="epi-field wide epi-custom-field"><label for="epiSede">Sede</label><input id="epiSede" maxlength="180" type="text" value="Aula Panamericana y Explanada H"/></div><div class="epi-field wide epi-custom-field"><label for="epiResumen">Resumen ejecutivo (editable)</label><textarea id="epiResumen" maxlength="4500" placeholder="Escribe aquí el texto que aparecerá en el informe." rows="4"></textarea></div><div class="epi-field wide epi-custom-field"><label for="epiInterpretacion">Interpretación de los resultados</label><textarea id="epiInterpretacion" maxlength="4500" placeholder="Escribe aquí el texto que aparecerá en el informe." rows="4">Los indicadores describen participación y asistencia; no permiten estimar prevalencia ni establecer diagnósticos.</textarea></div><div class="epi-field wide epi-custom-field"><label for="epiImpacto">Impacto y alcance educativo</label><textarea id="epiImpacto" maxlength="4500" placeholder="Escribe aquí el texto que aparecerá en el informe." rows="4"></textarea></div><div class="epi-field wide epi-custom-field"><label for="epiLimitaciones">Limitaciones del informe</label><textarea id="epiLimitaciones" maxlength="4500" placeholder="Escribe aquí el texto que aparecerá en el informe." rows="4"></textarea></div><div class="epi-field wide epi-custom-field"><label for="epiSeguimiento">Plan de seguimiento y responsables</label><textarea id="epiSeguimiento" maxlength="4500" placeholder="Escribe aquí el texto que aparecerá en el informe." rows="4"></textarea></div>
+<div class="epi-field wide"><label for="epiObjetivo">Objetivo</label><textarea id="epiObjetivo" maxlength="2500" rows="5"></textarea></div>
+<div class="epi-field wide"><label for="epiMetodologia">Metodología y fuente de información</label><textarea id="epiMetodologia" maxlength="2500" rows="5"></textarea></div>
+<div class="epi-field wide"><label for="epiActividades">Actividades realizadas</label><textarea id="epiActividades" maxlength="2500" rows="5"></textarea></div>
+<div class="epi-field wide"><label for="epiHallazgos">Hallazgos principales (sin datos identificables)</label><textarea id="epiHallazgos" maxlength="4000" placeholder="Describe resultados, observaciones y alcances; distingue registros de participantes efectivos." rows="5"></textarea></div>
+<div class="epi-field wide"><label for="epiConclusiones">Conclusiones</label><textarea id="epiConclusiones" maxlength="4000" rows="5"></textarea></div>
+<div class="epi-field wide"><label for="epiRecomendaciones">Recomendaciones y seguimiento</label><textarea id="epiRecomendaciones" maxlength="4000" rows="5"></textarea></div>
 <div class="epi-field wide"><label for="epiElaborado">Elaborado por</label><input id="epiElaborado" maxlength="150" value="Medicina de Campus · Salud y Bienestar"/></div>
 </div>
 <div class="epi-actions"><button class="primary" id="epiSave" type="button">Guardar y actualizar informe</button><button class="secondary" id="epiExport" type="button">Descargar / imprimir PDF</button><button class="secondary" id="epiReload" type="button">Recargar informe</button></div>
-
-
-
-
-
-
 </section>
-  </div></div>
+</div></div>
 </section>
 <section class="console-page" hidden="" id="console-cuenta">
 <div class="module-head"><div><h3>Mi cuenta y acceso</h3><p>Configuración de la sesión y orientación para controlar los permisos del panel.</p></div></div>
@@ -740,10 +749,11 @@ $('newFromPanel').onclick=()=>switchView('registro');
 // Informe epidemiológico: persistencia restringida a usuarios autorizados
 const EPICOLS={objetivo:'epiObjetivo',metodologia:'epiMetodologia',actividades:'epiActividades',hallazgos:'epiHallazgos',conclusiones:'epiConclusiones',recomendaciones:'epiRecomendaciones',elaborado_por:'epiElaborado'};
 const EPI_BUCKET='vapor_evento_2026';
+const EPI_EXTRA={titulo:'epiTitulo',subtitulo:'epiSubtitulo',fecha_evento:'epiFecha',horario_evento:'epiHorario',sede_evento:'epiSede',resumen_ejecutivo:'epiResumen',interpretacion:'epiInterpretacion',impacto:'epiImpacto',limitaciones:'epiLimitaciones',seguimiento:'epiSeguimiento'};
 let epiPhotos=[];
 function epiMessage(msg){$('epiStatus').textContent=msg;}
-function epiValues(){return Object.fromEntries(Object.entries(EPICOLS).map(([c,id])=>[c,$(id).value.trim()]));}
-function epiSetValues(data){for(const [c,id] of Object.entries(EPICOLS)) if(data[c]!==undefined) $(id).value=data[c]||'';}
+function epiValues(){return Object.fromEntries(Object.entries({...EPICOLS,...EPI_EXTRA}).map(([c,id])=>[c,$(id).value.trim()]));}
+function epiSetValues(data){for(const [c,id] of Object.entries({...EPICOLS,...EPI_EXTRA})) if(data[c]!==undefined) $(id).value=data[c]||'';}
 async function epiLoad(){
  if(!session?.access_token)return;
  try{
@@ -874,19 +884,19 @@ function renderEpiPreview(){
  const executive=total? 'Se registraron <strong>'+total+'</strong> inscripciones para la jornada y se han confirmado <strong>'+attended+'</strong> asistencias (<strong>'+pct+'</strong> de las inscripciones). '+(today<eventEnd?'Estos indicadores corresponden al avance del registro y pueden cambiar el día del evento.':'La proporción descrita corresponde exclusivamente a las personas inscritas.'):'Aún no se dispone de registros de participación para este corte. El documento se actualizará conforme se reciban inscripciones y se confirmen asistencias.';
  const when=new Date().toLocaleString('es-MX',{dateStyle:'medium',timeStyle:'short'});
  preview.innerHTML=''
- +'<header class="rp-cover"><div class="rp-logos">'+logoHtml+'</div><span class="rp-kicker">SALUD Y BIENESTAR · MEDICINA DE CAMPUS · 2026</span><h1>NO ES SOLO VAPOR</h1><p class="rp-subtitle">Informe epidemiológico descriptivo de la jornada</p><div class="rp-event-details"><span>17 de noviembre de 2026</span><span>10:00 a. m. – 2:00 p. m.</span><span>Aula Panamericana y Explanada H</span></div><div class="rp-state">'+status+'</div></header>'
+ +'<header class="rp-cover"><div class="rp-logos">'+logoHtml+'</div><span class="rp-kicker">SALUD Y BIENESTAR · MEDICINA DE CAMPUS · 2026</span><h1>'+safe(values.titulo||'NO ES SOLO VAPOR')+'</h1><p class="rp-subtitle">'+safe(values.subtitulo||'Informe epidemiológico descriptivo de la jornada')+'</p><div class="rp-event-details"><span>'+safe(values.fecha_evento||'17 de noviembre de 2026')+'</span><span>'+safe(values.horario_evento||'10:00 a. m. – 2:00 p. m.')+'</span><span>'+safe(values.sede_evento||'Aula Panamericana y Explanada H')+'</span></div><div class="rp-state">'+status+'</div></header>'
  +'<section class="rp-highlight"><div class="rp-label">RESULTADOS DE LA JORNADA</div><div class="rp-big">'+attended+' <span>asistencias confirmadas</span></div><p>Seguimiento de inscripciones y asistencia real de alumnos, colaboradores y comunidad participante.</p></section>'
- +'<section class="rp-block"><div class="rp-section-title"><span>01</span><div><small>RESUMEN EJECUTIVO</small><h2>Indicadores principales</h2></div></div><div class="rp-kpis"><div><small>INSCRITOS</small><b>'+total+'</b></div><div><small>ASISTENCIA CONFIRMADA</small><b>'+attended+'</b></div><div><small>PENDIENTES</small><b>'+pending+'</b></div><div><small>ASISTENCIA / INSCRIPCIÓN</small><b>'+pct+'</b></div></div><p class="rp-prose">'+executive+'</p></section>'
+ +'<section class="rp-block"><div class="rp-section-title"><span>01</span><div><small>RESUMEN EJECUTIVO</small><h2>Indicadores principales</h2></div></div><div class="rp-kpis"><div><small>INSCRITOS</small><b>'+total+'</b></div><div><small>ASISTENCIA CONFIRMADA</small><b>'+attended+'</b></div><div><small>PENDIENTES</small><b>'+pending+'</b></div><div><small>ASISTENCIA / INSCRIPCIÓN</small><b>'+pct+'</b></div></div><p class="rp-prose">'+executive+'</p>'+(values.resumen_ejecutivo?'<div class="rp-custom-intro"><strong>Resumen de la coordinación:</strong> '+words(values.resumen_ejecutivo,'')+'</div>':'')+'</section>'
  +'<section class="rp-block"><div class="rp-section-title"><span>02</span><div><small>CARACTERIZACIÓN DE PARTICIPANTES</small><h2>Distribución de la población inscrita</h2></div></div><div class="rp-chartgrid"><div class="rp-chart"><h3>Por tipo de participante</h3>'+barList(profileCounts)+'</div><div class="rp-chart"><h3>Por actividad seleccionada</h3>'+barList(actCounts)+'</div></div>'+(faculties.length?'<div class="rp-chart rp-chart-wide"><h3>Facultades registradas (alumnado)</h3>'+barList(faculties)+'</div>':'<p class="rp-prose rp-muted">No hay registros de alumnos por facultad para mostrar todavía.</p>')+'</section>'
  +'<section class="rp-block"><div class="rp-section-title"><span>03</span><div><small>METODOLOGÍA</small><h2>Objetivo y fuentes de información</h2></div></div><div class="rp-two"><div><h3>Objetivo</h3>'+narrative(values.objetivo,defaultObjective)+'</div><div><h3>Metodología</h3>'+narrative(values.metodologia,defaultMethod)+'</div></div><p class="rp-method-note"><strong>Interpretación:</strong> los resultados describen registros y asistentes de una actividad de promoción de la salud. No estiman prevalencia de tabaquismo o vapeo ni establecen diagnósticos respiratorios.</p></section>'
  +'<section class="rp-block"><div class="rp-section-title"><span>04</span><div><small>INTERVENCIÓN EDUCATIVA</small><h2>Actividades de la campaña</h2></div></div>'+narrative(values.actividades,defaultActivities)+'</section>'
- +'<section class="rp-block"><div class="rp-section-title"><span>05</span><div><small>LECTURA DE RESULTADOS</small><h2>Hallazgos y valoración epidemiológica</h2></div></div>'+narrative(values.hallazgos,noFindings)+'</section>'
+ +'<section class="rp-block"><div class="rp-section-title"><span>05</span><div><small>LECTURA DE RESULTADOS</small><h2>Hallazgos y valoración epidemiológica</h2></div></div>'+narrative(values.hallazgos,noFindings)+ (values.impacto||values.limitaciones?'<div class="rp-outline-note">'+(values.impacto?'<h3>Impacto y alcance</h3>'+narrative(values.impacto,''):'')+(values.limitaciones?'<h3>Limitaciones</h3>'+narrative(values.limitaciones,''):'')+'</div>':'')+'</section>'
  +'<section class="rp-block"><div class="rp-section-title"><span>06</span><div><small>EVIDENCIA DOCUMENTAL</small><h2>Fotografías de la jornada</h2></div></div><div class="rp-photo-grid">'+imageHtml+'</div></section>'
- +'<section class="rp-block"><div class="rp-section-title"><span>07</span><div><small>CONTINUIDAD PREVENTIVA</small><h2>Conclusiones y recomendaciones</h2></div></div><div class="rp-two"><div><h3>Conclusiones</h3>'+narrative(values.conclusiones,noConclusions)+'</div><div><h3>Recomendaciones</h3>'+narrative(values.recomendaciones,noRecommendations)+'</div></div></section>'
+ +'<section class="rp-block"><div class="rp-section-title"><span>07</span><div><small>CONTINUIDAD PREVENTIVA</small><h2>Conclusiones y recomendaciones</h2></div></div><div class="rp-two"><div><h3>Conclusiones</h3>'+narrative(values.conclusiones,noConclusions)+'</div><div><h3>Recomendaciones</h3>'+narrative(values.recomendaciones,noRecommendations)+'</div></div>'+(values.seguimiento?'<div class="rp-outline-note"><h3>Plan de seguimiento</h3>'+narrative(values.seguimiento,'')+'</div>':'')+'</section>'
  +'<footer class="rp-signature"><span>Elaborado por: <strong>'+safe(author)+'</strong></span><span>Corte de información: '+safe(when)+'</span><small>Documento institucional. Estadísticas agregadas, sin datos personales.</small></footer>';
 }
 $('previewRefresh').onclick=renderEpiPreview;
-['epiObjetivo','epiMetodologia','epiConclusiones','epiRecomendaciones'].forEach(id=>$(id).addEventListener('input',()=>{if(!$('console-reporte').hidden)renderEpiPreview()}));
+[...Object.values(EPI_EXTRA), ...Object.values(EPICOLS)].forEach(id=>$(id).addEventListener('input',()=>{if(!$('console-reporte').hidden)renderEpiPreview()}));
 // Inicializa la vista cuando se autentica el usuario, sin interferir con el registro público.
 const authObserver=new MutationObserver(async () => {if(!$('dashboardView').hidden&&session?.access_token){consoleGo(activeRoute()||'resumen',false);showAccount();await epiLoad();renderEpiPreview();}});
 authObserver.observe($('dashboardView'),{attributes:true,attributeFilter:['hidden']});
