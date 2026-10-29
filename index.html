@@ -585,6 +585,8 @@ body.print-epi #epiPrint .rp-signature{padding:18px 0}
  <div id="healthQuestions" aria-live="polite"></div><div id="respiratoryCard" style="margin-top:17px;padding:18px;background:#fff;border:1px solid #d8dfd2;border-radius:16px;text-align:center"><div aria-hidden="true" style="font-size:42px">🫁</div><h3 style="font:600 23px Georgia,serif;color:#354b36;margin:5px 0 8px">Cada respiración cuenta.</h3><p style="font-size:14px;margin:0;color:#586657">Conoce tus hábitos · Previene riesgos · Respira mejor</p><p style="font-weight:700;font-size:14px;color:#354b36;margin:12px 0 0">No es solo vapor: cada decisión cuenta.</p></div>
  <label style="display:flex;gap:9px;font-size:13px;align-items:flex-start;margin-top:13px"><input id="healthConsent" type="checkbox" required style="margin-top:4px"> <span>He leído la información sobre esta encuesta y comprendo que mis respuestas se usarán únicamente para estadísticas agregadas. Puedo elegir «Prefiero no responder».</span></label>
 </section>
+<div class="fieldset-title" data-step="05" id="indexHeading">Índice tabáquico · Exposición acumulada</div>
+<div id="tobaccoPageSlot"></div>
 <label class="consent"><input id="consent" required="" type="checkbox"/><span>He leído el <a href="https://www.up.edu.mx/aviso-de-privacidad/" rel="noopener noreferrer" target="_blank">Aviso de Privacidad de la Universidad Panamericana</a> y acepto el tratamiento de mis datos para este registro.</span></label>
 <div aria-live="polite" class="alert" hidden="" id="formStatus" role="status"></div>
 <div id="wizardNav" style="display:flex;gap:12px;margin:18px 0"><button type="button" class="secondary" id="wizardBack">← Anterior</button><button type="button" class="primary" id="wizardNext" style="flex:1">Siguiente →</button></div><button class="primary w100" id="saveRegister" type="submit">Confirmar registro →</button>
@@ -762,7 +764,7 @@ function drawHealth(p){
  });
  const tobacco=document.createElement('div');tobacco.style.cssText='margin:16px 0;padding:16px;background:#e8eee3;border:1px solid #c9d4c5;border-radius:14px';
  tobacco.innerHTML='<h3 style="margin:0 0 8px;font:600 20px Georgia,serif">Índice tabáquico · paquetes-año</h3><p style="font-size:13px;margin:0 0 12px">Esta sección es para quienes han fumado cigarrillos convencionales alguna vez, aunque actualmente ya no fumen. No aplica a vapeadores. Cálculo: años fumados × cigarrillos diarios / 20.</p><label for="h_tobaccoEver" style="display:block;font-weight:650;margin-bottom:8px">¿Has fumado cigarrillos convencionales alguna vez?</label><select id="h_tobaccoEver" name="h_tobaccoEver" required style="width:100%;padding:10px;border-radius:8px"><option value="">Selecciona una respuesta</option><option value="Sí">Sí, actualmente o en el pasado</option><option value="No">Nunca</option><option value="Prefiero no responder">Prefiero no responder</option></select><div id="h_tobaccoDetails" hidden style="padding-top:12px"><label for="h_tobaccoYears" style="display:block;font-weight:650">Años totales en los que fumaste cigarrillos</label><input type="number" min="0.01" max="100" step="0.01" id="h_tobaccoYears" placeholder="Ej. 8" style="width:100%;padding:10px;margin:7px 0 12px;border-radius:8px;border:1px solid #cbd1c5"><label for="h_tobaccoDaily" style="display:block;font-weight:650">Promedio de cigarrillos fumados por día durante ese tiempo</label><input type="number" min="0.01" max="100" step="0.01" id="h_tobaccoDaily" placeholder="Ej. 10" style="width:100%;padding:10px;margin:7px 0 12px;border-radius:8px;border:1px solid #cbd1c5"><div id="h_tobaccoResult" aria-live="polite" style="font-weight:700;color:#354b36">Introduce ambos datos para calcular el índice.</div><p style="font-size:12px;margin-bottom:0">Si tu consumo ha variado mucho, el resultado será aproximado. Si prefieres no declarar las cantidades, utiliza la opción anterior.</p></div>';
- root.append(tobacco);
+ $('tobaccoPageSlot').replaceChildren(tobacco);
  $('h_tobaccoEver').addEventListener('change',()=>{
  const yes=$('h_tobaccoEver').value==='Sí';$('h_tobaccoDetails').hidden=!yes;$('h_tobaccoYears').required=yes;$('h_tobaccoDaily').required=yes;if(!yes){$('h_tobaccoYears').value='';$('h_tobaccoDaily').value='';}
  });
@@ -797,27 +799,33 @@ function profileUpdate(){
 document.querySelectorAll('input[name="perfil"]').forEach(x=>x.onchange=profileUpdate);
 profileUpdate();
 
-let wizardStep=0;const wizardNames=['Perfil de participante','Datos personales','Actividades','Salud respiratoria'];
+let wizardStep=0;
+const wizardNames=['Perfil de participante','Datos personales','Actividades','Salud respiratoria','Índice tabáquico'];
 function yearsOld(iso){if(!iso)return null;const d=new Date(iso+'T12:00:00'),now=new Date();if(!Number.isFinite(d.getTime())||d>now)return null;let age=now.getFullYear()-d.getFullYear();if(now.getMonth()<d.getMonth()||(now.getMonth()===d.getMonth()&&now.getDate()<d.getDate()))age--;return age;}
 $('fechaNacimiento').addEventListener('change',()=>{const age=yearsOld($('fechaNacimiento').value);$('edadPreview').value=age===null?'Fecha inválida':age+' años';});
+function hasTobaccoStep(){return $('h_tobaccoEver')?.value==='Sí';}
+function visibleSteps(){return hasTobaccoStep()?[0,1,2,3,4]:[0,1,2,3];}
 function initWizard(){
  const form=$('registrationForm'),all=Array.from(form.children),kickers=all.filter(x=>x.dataset.step);
- const parts=kickers.map((start,i)=>{const end=i+1<kickers.length?all.indexOf(kickers[i+1]):all.indexOf($('wizardNav'));return all.slice(all.indexOf(start),end)});
- for(let i=0;i<parts.length;i++){const wrapper=document.createElement('div');wrapper.className='wizard-page';wrapper.dataset.wizard=i;parts[i][0].before(wrapper);parts[i].forEach(node=>wrapper.append(node));}
- $('wizardBack').onclick=()=>displayWizard(wizardStep-1);
+ kickers.forEach((start,i)=>{const first=all.indexOf(start),end=i+1<kickers.length?all.indexOf(kickers[i+1]):all.indexOf($('wizardNav'));const wrapper=document.createElement('div');wrapper.className='wizard-page';wrapper.dataset.wizard=i;start.before(wrapper);all.slice(first,end).forEach(node=>wrapper.append(node));});
+ $('wizardBack').onclick=()=>{const steps=visibleSteps();displayWizard(steps[Math.max(0,steps.indexOf(wizardStep)-1)]);};
  $('wizardNext').onclick=()=>{
  const page=form.querySelector('.wizard-page[data-wizard="'+wizardStep+'"]');
  if(wizardStep===0&&!currentProfile()){alert('Selecciona tu perfil para continuar.');return;}
- if(wizardStep===1){const required=page.querySelectorAll('[required]');for(const field of required){if(!field.checkValidity()){field.reportValidity();return;}}if(yearsOld($('fechaNacimiento').value)===null){$('fechaNacimiento').reportValidity();return;}}
- displayWizard(wizardStep+1);
+ if(wizardStep===1&&yearsOld($('fechaNacimiento').value)===null){$('fechaNacimiento').reportValidity();return;}
+ for(const field of page.querySelectorAll('[required]')){if(!field.checkValidity()){field.reportValidity();return;}}
+ const steps=visibleSteps();displayWizard(steps[Math.min(steps.length-1,steps.indexOf(wizardStep)+1)]);
  };
  displayWizard(0);
 }
 function displayWizard(n){
- wizardStep=Math.max(0,Math.min(3,n));document.querySelectorAll('.wizard-page').forEach(x=>x.hidden=Number(x.dataset.wizard)!==wizardStep);
- $('wizardProgress').textContent='Paso '+(wizardStep+1)+' de 4 · '+wizardNames[wizardStep];
- $('wizardBar').style.width=((wizardStep+1)*25)+'%';$('wizardBack').hidden=wizardStep===0;$('wizardNext').hidden=wizardStep===3;$('saveRegister').hidden=wizardStep!==3;
- document.querySelector('.form-head').scrollIntoView({block:'start',behavior:'smooth'});
+ const steps=visibleSteps();wizardStep=steps.includes(n)?n:3;
+ document.querySelectorAll('.wizard-page').forEach(x=>x.hidden=Number(x.dataset.wizard)!==wizardStep);
+ const at=steps.indexOf(wizardStep);
+ $('wizardProgress').textContent='Paso '+(at+1)+' de '+steps.length+' · '+wizardNames[wizardStep];
+ $('wizardBar').style.width=((at+1)/steps.length*100)+'%';
+ $('wizardBack').hidden=at===0;$('wizardNext').hidden=at===steps.length-1;$('saveRegister').hidden=at!==steps.length-1;
+ document.querySelector('.form-head').scrollIntoView({block:'start',behavior:'instant'});
 }
 initWizard();
 function notification(id,msg,error=false){let el=$(id);el.hidden=!msg;el.textContent=msg;el.className='alert '+(error?'error':'info');}
@@ -825,7 +833,7 @@ function newId(){if(globalThis.crypto?.randomUUID)return crypto.randomUUID();let
 $('registrationForm').addEventListener('submit',async e=>{
  e.preventDefault();notification('formStatus','');const p=currentProfile();
  if(!p){notification('formStatus','Selecciona el tipo de participante.',true);$('profileGrid').scrollIntoView({behavior:'smooth',block:'center'});return;}
- if(!$('registrationForm').reportValidity())return;
+ for(const field of $('registrationForm').querySelectorAll('[required]')){if(!field.checkValidity()){const page=field.closest('.wizard-page');if(page)displayWizard(Number(page.dataset.wizard));field.reportValidity();return;}}
  const healthAnswers=getHealthAnswers(p);
  const nombre=$('nombre').value.trim(),correo=$('correo').value.trim().toLowerCase();
  if(nombre.length<3){notification('formStatus','Ingresa tu nombre completo.',true);return;}
@@ -835,7 +843,7 @@ $('registrationForm').addEventListener('submit',async e=>{
  let btn=$('saveRegister');btn.disabled=true;btn.textContent='Guardando inscripción…';
  try{
    const res=await fetch(DB+'/rest/v1/rpc/registrar_vapor_con_edad_2026',{method:'POST',headers:{apikey:KEY,'Content-Type':'application/json'},body:JSON.stringify(payload)});
-   if(!res.ok){const err=await res.json().catch(()=>({}));if(err?.code==='23505'||res.status===409)throw Error('No se pudo generar un folio único. Inténtalo nuevamente.');throw Error('No fue posible guardar la inscripción. '+(err?.code==='23514'?'Revisa los datos ingresados.':'Inténtalo nuevamente.'));}
+   if(!res.ok){const err=await res.json().catch(()=>({}));throw Error('No fue posible guardar la inscripción ('+res.status+(err?.code?', '+err.code:'')+'). '+(err?.message||'Verifica tus datos e inténtalo de nuevo.'));}
    const folio=await res.json();
    if(typeof folio!=='string'||!/^\d{3,}$/.test(folio))throw Error('El servidor no devolvió un folio válido.');
    $('showFolio').textContent=folio;$('showSummary').textContent=nombre+' · '+p+' · '+(activity==='Ambas'?'Plática y estaciones':activity==='Plática'?'Plática':'Estaciones');
