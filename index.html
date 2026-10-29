@@ -375,6 +375,38 @@ body{background:radial-gradient(ellipse at 90% -10%,rgba(202,190,164,.14),transp
  body.print-epi #epiPrint .report-executive p{margin:5px 0 0}
  body.print-epi #epiPrint .report-conclusion h2{border:0;margin-top:4px}
 }
+
+/* V3: editor por páginas y por apartados */
+#console-editar-reporte{padding-bottom:50px}
+#console-editar-reporte .module-head{margin-bottom:18px}
+.editor-save-top,.editor-save-bottom{position:sticky;top:8px;z-index:24;display:flex;align-items:center;justify-content:space-between;gap:16px;border:1px solid #d4ddce;background:#f7faef;padding:14px 18px;border-radius:15px;box-shadow:0 4px 17px #23332d13;margin-bottom:14px}
+.editor-save-bottom{position:static;margin-top:16px;justify-content:flex-end}
+.editor-button-pair{display:flex;flex-wrap:wrap;gap:9px}
+.editor-save-top .primary,.editor-save-bottom .primary{background:#395940;color:white;font-weight:700;white-space:nowrap}
+.edit-hint{font-size:12px;color:#566354;margin-top:5px;line-height:1.4}
+.edit-hint.error{color:#9a332f;font-weight:700}.edit-hint.success{color:#236944;font-weight:700}
+#editorMount #epiReportSection{display:block!important;max-width:1050px;border:1px solid #e0e4da;border-radius:18px;background:white;padding:24px!important;box-shadow:none!important;margin:0 auto!important}
+#editorMount .epi-grid{display:block!important}
+#editorMount .epi-form-group-title{display:none}
+.editor-group{padding:20px 22px;margin:14px 0 22px;background:#fff;border:1px solid #e0e4d8;border-radius:16px;scroll-margin-top:115px}
+.editor-group>h3{font-size:21px;margin:0 0 7px;color:#334938;font-family:Georgia,serif}
+.editor-group>p{font-size:13px;color:#6f756b;margin:0 0 20px}
+.editor-group .epi-field{margin-bottom:16px;width:100%!important}
+.editor-group .epi-field label{font-size:13px;font-weight:700;color:#2d4037;display:block;margin:0 0 7px}
+.editor-group .epi-field input,.editor-group .epi-field textarea{width:100%;border:1px solid #cbd4c6;border-radius:9px;background:#fcfdf9;min-height:45px;padding:12px 14px;font:15px/1.55 inherit;color:#213c31;box-sizing:border-box}
+.editor-group .epi-field textarea{min-height:125px;resize:vertical;font-family:inherit}
+.editor-group .epi-field input:focus,.editor-group .epi-field textarea:focus{outline:3px solid #d6c39a;border-color:#8b9e87;background:#fff}
+.editor-group .epi-field label::after{content:' · editable';color:#aa8553;font-size:10px;font-weight:500}
+#editorMount .epi-actions{display:none}
+.rp-edit-btn{appearance:none;cursor:pointer;border:1px solid #9ba98c;color:#345b46;border-radius:8px;background:#f5f8f0;font:700 12px/1.4 Arial,sans-serif;padding:7px 11px;margin-left:auto;white-space:nowrap}
+.rp-edit-btn:hover,.rp-edit-btn:focus{background:#e6eee3;outline:2px solid #cadabf}
+.rp-cover .rp-edit-btn{display:block;margin:0 0 10px auto;background:#fff;color:#304c3b}
+.rp-section-title{display:flex;align-items:center;gap:12px}
+.rp-section-title>div{flex:1}
+.report-page-actions #openReportEditor{display:none!important}
+#reportInlineHelp{display:none!important}
+@media(max-width:750px){.editor-save-top{position:sticky;top:0;display:block;padding:13px}.editor-button-pair{margin-top:12px}.editor-button-pair button{flex:1}.editor-save-bottom{display:flex;flex-wrap:wrap}.editor-save-bottom button{flex:1}#editorMount #epiReportSection{padding:14px!important}.editor-group{padding:15px 13px}.rp-edit-btn{font-size:11px;padding:6px 7px}}
+@media print{.rp-edit-btn,.editor-save-top,.editor-save-bottom,#console-editar-reporte{display:none!important}}
 </style>
 <style id="vapor-pages-and-report-styles">
 /* Separate screens, never a long combined public/admin document. */
@@ -577,7 +609,8 @@ body.print-epi #epiPrint .rp-signature{padding:18px 0}
 <div hidden="" id="dashboardView"><div class="console-layout">
 <aside aria-label="Navegación del panel" class="console-sidebar">
 <div class="console-sidehead"><span class="dot-logo">UP</span><div><b>Salud y Bienestar</b><small>CAMPAÑA · 2026</small></div></div>
-<div class="console-nav-label">PANEL DE CONTROL</div><nav class="console-menu"><button aria-current="page" class="console-nav-btn active" data-console-target="resumen" type="button"><span aria-hidden="true" class="nav-sym">⌂</span><span>Resumen</span></button><button aria-current="false" class="console-nav-btn" data-console-target="checkin" type="button"><span aria-hidden="true" class="nav-sym">✓</span><span>Check-in</span></button><button aria-current="false" class="console-nav-btn" data-console-target="participantes" type="button"><span aria-hidden="true" class="nav-sym">♧</span><span>Participantes</span></button><button aria-current="false" class="console-nav-btn" data-console-target="comprobantes" type="button"><span aria-hidden="true" class="nav-sym">▣</span><span>Comprobantes</span></button><button aria-current="false" class="console-nav-btn" data-console-target="estadisticas" type="button"><span aria-hidden="true" class="nav-sym">▤</span><span>Estadísticas</span></button><button aria-current="false" class="console-nav-btn" data-console-target="evidencias" type="button"><span aria-hidden="true" class="nav-sym">▧</span><span>Evidencias</span></button><button aria-current="false" class="console-nav-btn" data-console-target="reporte" type="button"><span aria-hidden="true" class="nav-sym">▤</span><span>Reporte epidemiológico</span></button><button aria-current="false" class="console-nav-btn" data-console-target="cuenta" type="button"><span aria-hidden="true" class="nav-sym">⚙</span><span>Mi cuenta</span></button></nav>
+<div class="console-nav-label">PANEL DE CONTROL</div><nav class="console-menu"><button aria-current="page" class="console-nav-btn active" data-console-target="resumen" type="button"><span aria-hidden="true" class="nav-sym">⌂</span><span>Resumen</span></button><button aria-current="false" class="console-nav-btn" data-console-target="checkin" type="button"><span aria-hidden="true" class="nav-sym">✓</span><span>Check-in</span></button><button aria-current="false" class="console-nav-btn" data-console-target="participantes" type="button"><span aria-hidden="true" class="nav-sym">♧</span><span>Participantes</span></button><button aria-current="false" class="console-nav-btn" data-console-target="comprobantes" type="button"><span aria-hidden="true" class="nav-sym">▣</span><span>Comprobantes</span></button><button aria-current="false" class="console-nav-btn" data-console-target="estadisticas" type="button"><span aria-hidden="true" class="nav-sym">▤</span><span>Estadísticas</span></button><button aria-current="false" class="console-nav-btn" data-console-target="evidencias" type="button"><span aria-hidden="true" class="nav-sym">▧</span><span>Evidencias</span></button><button aria-current="false" class="console-nav-btn" data-console-target="reporte" type="button"><span aria-hidden="true" class="nav-sym">▤</span><span>Reporte epidemiológico</span></button>
+<button class="console-nav-btn" type="button" data-console-target="editar-reporte" aria-label="Editar reporte epidemiológico">✎ &nbsp; Editar informe</button><button aria-current="false" class="console-nav-btn" data-console-target="cuenta" type="button"><span aria-hidden="true" class="nav-sym">⚙</span><span>Mi cuenta</span></button></nav>
 <div class="console-sidefoot">No es solo vapor<br/><small>17 de noviembre · Campus Guadalajara</small><hr/><small>Acceso privado · Datos protegidos</small></div>
 </aside>
 <div class="console-workspace">
@@ -620,8 +653,8 @@ body.print-epi #epiPrint .rp-signature{padding:18px 0}
 </section>
 <section class="console-page" hidden="" id="console-reporte">
 <div class="module-head report-top-head"><div><div class="tinytitle">DOCUMENTO INSTITUCIONAL · SALUD PÚBLICA</div><h3>Reporte epidemiológico de la jornada</h3><p>Informe descriptivo de alcance y participación. Actualizado con los registros del sistema.</p></div><span class="module-chip">Documento, no formulario</span></div>
-<div class="report-page-actions no-print"><button class="primary" id="enableInlineEdit" type="button">✎ Editar directamente el informe</button>
-<button class="secondary" id="openReportEditor" type="button">Editar mediante formulario</button>
+<div class="report-page-actions no-print"><button class="primary" id="enableInlineEdit" type="button">✎ Editar informe completo</button>
+<button class="secondary" id="openReportEditor" type="button">Editar por apartados</button>
 <button class="secondary" id="reportEvidence" type="button">▧ Agregar fotografías</button>
 <button class="secondary" id="previewRefresh" type="button">↻ Actualizar cifras</button>
 <button class="primary" id="reportDownload" type="button">⇩ Descargar / imprimir PDF</button>
@@ -645,6 +678,12 @@ body.print-epi #epiPrint .rp-signature{padding:18px 0}
 </section>
 </div></div>
 </section>
+<section class="console-page report-edit-page" hidden="" id="console-editar-reporte">
+  <div class="module-head"><div><div class="tinytitle">MÓDULO EXCLUSIVO DE ADMINISTRACIÓN</div><h3>Editar reporte epidemiológico</h3><p>Modifica los textos del informe. Los datos automáticos de inscripción y asistencia no se alteran.</p></div></div>
+  <div class="editor-save-top"><div><strong>Editor del informe final</strong><div id="editProgressNotice" class="edit-hint" role="status" aria-live="polite">Selecciona un apartado, escribe tu información y presiona Guardar.</div></div><div class="editor-button-pair"><button class="secondary" id="returnToReport" type="button">← Ver informe</button><button class="primary" id="saveReportTop" type="button">Guardar cambios</button></div></div>
+  <div id="editorMount"></div>
+  <div class="editor-save-bottom"><button class="secondary" id="returnToReportBottom" type="button">← Volver al informe</button><button class="primary" id="saveReportBottom" type="button">Guardar cambios y ver informe</button></div>
+</section>
 <section class="console-page" hidden="" id="console-cuenta">
 <div class="module-head"><div><h3>Mi cuenta y acceso</h3><p>Configuración de la sesión y orientación para controlar los permisos del panel.</p></div></div>
 <div class="account-grid"><div class="panel account-card"><div class="account-avatar" id="accountInitials">UP</div><div><div class="tinytitle">CUENTA AUTORIZADA</div><h3 id="accountEmail">—</h3><p id="accountRole">—</p><span class="pill yes">Sesión activa</span></div></div><div class="panel account-card"><div><div class="tinytitle">PROTECCIÓN DE DATOS</div><h3>Acceso exclusivo para el equipo autorizado</h3><p>Los permisos se asignan desde Supabase. No compartas cuentas, contraseñas ni archivos exportados con personas sin autorización.</p><button class="secondary" id="accountSignout" type="button">Cerrar sesión</button></div></div></div>
@@ -664,7 +703,7 @@ const TABLE='registros_no_es_solo_vapor_2026';
 const $=id=>document.getElementById(id);
 const safe=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let session=null,role='',rows=[],selectedEdit=null;
-function activeRoute(){let v=decodeURIComponent(location.hash.replace(/^#/,''));let m=v.match(/^panel\/(resumen|checkin|participantes|comprobantes|estadisticas|evidencias|reporte|cuenta)$/);return m?m[1]:null;}
+function activeRoute(){let v=decodeURIComponent(location.hash.replace(/^#/,''));let m=v.match(/^panel\/(resumen|checkin|participantes|comprobantes|estadisticas|evidencias|reporte|editar-reporte|cuenta)$/);return m?m[1]:null;}
 function switchView(view,updateUrl=true){
  const show=view==='admin';
  document.body.classList.toggle('portal-admin',show);
@@ -847,7 +886,7 @@ $('epiSave').onclick=epiSave;$('epiReload').onclick=epiLoad;$('epiUploadBtn').on
 
 
 // Navegación por interfaces del panel. La autorización real se verifica en Supabase.
-const consoleNames={resumen:['Resumen de la jornada','Indicadores y seguimiento de la campaña de salud respiratoria.'],checkin:['Check-in de la jornada','Confirma la asistencia de cada participante de forma individual.'],participantes:['Participantes','Consulta y administra la base de registros.'],comprobantes:['Comprobantes','Localiza y emite constancias de inscripción.'],estadisticas:['Estadísticas','Distribución de registros y asistencias por perfil y actividad.'],evidencias:['Evidencia fotográfica','Galería privada de la jornada de prevención.'],reporte:['Reporte epidemiológico final','Informe ejecutivo descriptivo para la Jefatura de Salud y Bienestar.'],cuenta:['Mi cuenta y seguridad','Consulta los permisos activos y protege los datos de los participantes.']};
+const consoleNames={resumen:['Resumen de la jornada','Indicadores y seguimiento de la campaña de salud respiratoria.'],checkin:['Check-in de la jornada','Confirma la asistencia de cada participante de forma individual.'],participantes:['Participantes','Consulta y administra la base de registros.'],comprobantes:['Comprobantes','Localiza y emite constancias de inscripción.'],estadisticas:['Estadísticas','Distribución de registros y asistencias por perfil y actividad.'],evidencias:['Evidencia fotográfica','Galería privada de la jornada de prevención.'],reporte:['Reporte epidemiológico final','Informe ejecutivo descriptivo para la Jefatura de Salud y Bienestar.'],'editar-reporte':['Editar reporte epidemiológico','Modifica los textos de la jornada y guárdalos en la base de datos.'],cuenta:['Mi cuenta y seguridad','Consulta los permisos activos y protege los datos de los participantes.']};
 function consoleGo(key,updateUrl=true){
  if(!consoleNames[key])return;
  document.querySelectorAll('.console-page').forEach(x=>x.hidden=x.id!=='console-'+key);
@@ -1042,5 +1081,117 @@ $('epiSave').onclick=async()=>{
  try {const ok=await epiSave();if(ok){hideReportEditor();epiMessage('✓ Informe guardado correctamente.');renderEpiPreview();}}
  finally {btn.disabled=false;btn.textContent='Guardar y actualizar informe';}
 };
+
+// Edición definitiva: pantalla independiente, botones por sección y verificación del guardado.
+const REPORT_EDITOR_SECTIONS=[
+ {number:0,title:'Portada y datos generales',description:'Identidad del informe y resumen ejecutivo.',fields:['epiTitulo','epiSubtitulo','epiFecha','epiHorario','epiSede','epiResumen','epiElaborado']},
+ {number:1,title:'Interpretación de resultados',description:'Explica el alcance de las cifras automáticas.',fields:['epiInterpretacion']},
+ {number:2,title:'Objetivo y metodología',description:'Define lo que se evaluó y las fuentes de información.',fields:['epiObjetivo','epiMetodologia']},
+ {number:3,title:'Actividades realizadas',description:'Describe la conferencia y ambas estaciones.',fields:['epiActividades']},
+ {number:4,title:'Hallazgos, impacto y limitaciones',description:'Registra resultados cualitativos y observaciones.',fields:['epiHallazgos','epiImpacto','epiLimitaciones']},
+ {number:5,title:'Evidencia fotográfica',description:'Las fotografías se cargan desde Evidencias.',fields:[]},
+ {number:6,title:'Conclusiones, recomendaciones y seguimiento',description:'Completa el análisis y las acciones propuestas.',fields:['epiConclusiones','epiRecomendaciones','epiSeguimiento']}
+];
+const editorMount=document.getElementById('editorMount');
+const editingForm=document.getElementById('epiReportSection');
+editorMount.appendChild(editingForm);
+const originalFieldGrid=editingForm.querySelector('.epi-grid');
+const editSectionElements=[];
+REPORT_EDITOR_SECTIONS.forEach((sect,i)=>{
+ if(!sect.fields.length)return;
+ const wrap=document.createElement('section');wrap.className='editor-group';wrap.id='editorGroup'+i;
+ const head=document.createElement('h3');head.textContent=(i===0?'00':String(i).padStart(2,'0'))+' · '+sect.title;
+ const desc=document.createElement('p');desc.textContent=sect.description;wrap.append(head,desc);
+ sect.fields.forEach(id=>{const input=document.getElementById(id);const field=input?.closest('.epi-field');if(field)wrap.appendChild(field)});
+ originalFieldGrid.appendChild(wrap);editSectionElements.push(wrap);
+});
+function reportEditorStatus(message,type='info'){
+ const text=document.getElementById('editProgressNotice');
+ text.textContent=message;text.className='edit-hint '+(type==='error'?'error':type==='success'?'success':'');
+ const action=document.getElementById('reportActionStatus');if(action)action.textContent=message;
+}
+let editorDirty=false;
+const editorIds=[...Object.values(EPICOLS),...Object.values(EPI_EXTRA)];
+editorIds.forEach(id=>document.getElementById(id)?.addEventListener('input',()=>{
+ editorDirty=true;
+ reportEditorStatus('Cambios pendientes de guardar. Presiona «Guardar cambios».');
+}));
+function openNewReportEditor(section=0){
+ if(role!=='admin'){epiMessage('Tu cuenta no tiene permiso de edición.');return;}
+ consoleGo('editar-reporte');
+ reportEditorStatus('Puedes modificar todos los textos y guardar los cambios.');
+ setTimeout(()=>{
+  const group=document.getElementById('editorGroup'+section)||document.getElementById('editorGroup0');
+  if(group)group.scrollIntoView({block:'start',behavior:'instant'});
+  group?.querySelector('input,textarea')?.focus({preventScroll:true});
+ },50);
+}
+// Reutilizamos el botón existente: no activamos contentEditable que causaba confusión.
+document.getElementById('enableInlineEdit').onclick=()=>openNewReportEditor(0);
+document.getElementById('openReportEditor').onclick=()=>openNewReportEditor(0);
+function addReportPencils(){
+ const box=document.getElementById('reportPreview');
+ if(!box)return;
+ const cover=box.querySelector('.rp-cover');
+ if(cover&&!cover.querySelector('.rp-edit-btn')){
+  const btn=document.createElement('button');btn.type='button';btn.className='rp-edit-btn no-print';btn.textContent='✎ Editar portada';btn.dataset.section='0';cover.prepend(btn);
+ }
+ box.querySelectorAll('.rp-block').forEach((section,i)=>{
+  if(section.querySelector('.rp-edit-btn'))return;
+  const head=section.querySelector('.rp-section-title');if(!head)return;
+  const btn=document.createElement('button');btn.type='button';btn.className='rp-edit-btn no-print';
+  btn.dataset.section=String(i===0?1:i===1?1:i===2?2:i===3?3:i===4?4:i===5?5:6);
+  btn.textContent=i===5?'▧ Gestionar fotografías':'✎ Editar sección';
+  head.appendChild(btn);
+ });
+}
+document.getElementById('reportPreview').addEventListener('click',e=>{
+ const btn=e.target.closest('.rp-edit-btn');if(!btn)return;
+ const section=Number(btn.dataset.section);
+ if(section===5)consoleGo('evidencias'); else openNewReportEditor(section);
+});
+const reportRenderForEditor=renderEpiPreview;
+renderEpiPreview=function(){reportRenderForEditor();addReportPencils();};
+// Guardar con PATCH y verificar respuesta para evitar falsos mensajes de éxito.
+async function saveReportVerified(){
+ if(role!=='admin'||!session?.access_token){reportEditorStatus('Inicia sesión con tu cuenta administradora.','error');return false;}
+ const payload={...epiValues(),actualizado_en:new Date().toISOString()};
+ const btns=['epiSave','saveReportTop','saveReportBottom'].map(id=>document.getElementById(id)).filter(Boolean);
+ btns.forEach(b=>b.disabled=true);
+ reportEditorStatus('Guardando en la base de datos…');
+ try{
+  let result=await adminFetch('/rest/v1/vapor_reporte_2026?id=eq.1',{
+   method:'PATCH',headers:{Prefer:'return=representation'},body:JSON.stringify(payload)
+  });
+  if(!Array.isArray(result)||result.length!==1){
+   // Fallback si el reporte aún no existe.
+   result=await adminFetch('/rest/v1/vapor_reporte_2026?on_conflict=id',{
+    method:'POST',headers:{Prefer:'resolution=merge-duplicates,return=representation'},body:JSON.stringify({id:1,...payload})
+   });
+  }
+  if(!Array.isArray(result)||result.length!==1)throw Error('La base no confirmó la actualización del informe.');
+  // Verificación independiente: lectura posterior al guardado.
+  const verified=await adminFetch('/rest/v1/vapor_reporte_2026?select=*&id=eq.1');
+  if(!verified?.length)throw Error('No se pudo verificar el documento después de guardarlo.');
+  const differs=Object.keys(payload).filter(k=>k!=='actualizado_en'&&String(verified[0][k]??'')!==String(payload[k]??''));
+  if(differs.length)throw Error('Algunos cambios no aparecen en el servidor: '+differs.slice(0,3).join(', '));
+  epiSetValues(verified[0]);editorDirty=false;
+  reportEditorStatus('✓ ¡Guardado confirmado! Tus cambios están en Supabase.','success');
+  renderEpiPreview();
+  return true;
+ }catch(e){reportEditorStatus('No se pudo guardar: '+(e?.message||'Error desconocido')+'. Conserva el texto en pantalla e inténtalo otra vez.','error');return false;}
+ finally{btns.forEach(b=>b.disabled=false);}
+}
+document.getElementById('epiSave').onclick=saveReportVerified;
+document.getElementById('saveReportTop').onclick=saveReportVerified;
+document.getElementById('saveReportBottom').onclick=async()=>{if(await saveReportVerified())consoleGo('reporte');};
+document.getElementById('returnToReport').onclick=()=>{if(editorDirty&&!confirm('Tienes cambios sin guardar. ¿Salir sin guardarlos?'))return;consoleGo('reporte');};
+document.getElementById('returnToReportBottom').onclick=document.getElementById('returnToReport').onclick;
+// Evita que la nueva pantalla se abra con la vieja edición superpuesta.
+document.getElementById('closeReportEditor').onclick=()=>{document.getElementById('reportEditorOverlay').hidden=true;consoleGo('reporte')};
+// Refrescar vista después de cargar un reporte real, sin borrar texto en edición.
+const initialEpiLoad=epiLoad;
+epiLoad=async function(){if(editorDirty)return;await initialEpiLoad();if(!editorDirty)renderEpiPreview();};
+addReportPencils();
 </script>
 <div aria-hidden="true" id="receiptPrint"></div></body></html>
