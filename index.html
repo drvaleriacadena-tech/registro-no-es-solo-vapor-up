@@ -590,7 +590,7 @@ body.print-epi #epiPrint .rp-signature{padding:18px 0}
 <button class="primary w100" id="saveRegister" type="submit">Confirmar registro →</button>
 <div class="minor">Registro y cuestionario preventivo · Respuestas de hábitos almacenadas por separado</div>
 </form></div>
-<section aria-label="Registro exitoso" class="success" hidden="" id="successView"><div class="circle">✓</div><h2>¡Registro exitoso!</h2><p>Tu inscripción quedó guardada. Conserva este folio para identificarte el día de la jornada.</p><div class="code" id="showFolio"></div><p id="showSummary"></p><div id="healthResult" style="background:#f2f5ec;border:1px solid #dce3d5;border-radius:14px;padding:17px;margin:15px 0;text-align:left"></div><div class="actions"><button class="secondary" id="printConfirm" type="button">Imprimir comprobante</button><button class="primary" id="newRegister" type="button">Nuevo registro</button></div></section>
+<section aria-label="Registro exitoso" class="success" hidden="" id="successView"><div class="circle">✓</div><h2>¡Registro exitoso!</h2><p>Tu inscripción quedó guardada. Conserva este folio para identificarte el día de la jornada.</p><div class="code" id="showFolio"></div><p id="showSummary"></p><div id="healthResult" style="background:#f2f5ec;border:1px solid #dce3d5;border-radius:14px;padding:17px;margin:15px 0;text-align:left"></div><div class="actions"><button class="secondary" id="printConfirm" type="button">⬇ Descargar comprobante PDF</button><button class="primary" id="newRegister" type="button">Nuevo registro</button></div></section>
 
 </div>
 <aside aria-label="Datos de la jornada" class="panel eventbox">
@@ -645,7 +645,7 @@ body.print-epi #epiPrint .rp-signature{padding:18px 0}
 </section>
 </section>
 <section class="console-page" hidden="" id="console-comprobantes">
-<div class="module-head"><div><h3>Comprobantes de inscripción</h3><p>Localiza un folio y genera su comprobante para impresión. Disponible solo en el panel autorizado.</p></div></div>
+<div class="module-head"><div><h3>Comprobantes de inscripción</h3><p>Localiza un folio y descarga su comprobante en PDF. Disponible solo en el panel autorizado.</p></div></div>
 <div class="panel tool-card"><label class="tool-label" for="receiptSearch">Buscar folio o participante</label><div class="lookup-row"><input autocomplete="off" class="toolinput" id="receiptSearch" placeholder="Folio, nombre o correo electrónico"/><button class="secondary" id="receiptClear" type="button">Limpiar</button></div><div aria-live="polite" class="lookup-results" id="receiptResults">Escribe un nombre o folio para mostrar comprobantes.</div></div>
 <div class="panel note-panel"><b>Sobre el folio</b><p>Los nuevos registros cuentan con folios consecutivos de tres dígitos. El comprobante acredita la inscripción, no la asistencia ni la realización de una prueba de función pulmonar.</p></div>
 </section>
@@ -702,6 +702,7 @@ body.print-epi #epiPrint .rp-signature{padding:18px 0}
 </div>
 <div class="modal-bg" hidden="" id="editOverlay"><div aria-labelledby="editTitle" aria-modal="true" class="modal" role="dialog"><h2 id="editTitle">Editar inscripción</h2><form id="editForm"><div class="fields"><div class="field full"><label for="editName">Nombre completo</label><input id="editName" maxlength="120" required=""/></div><div class="field full"><label for="editEmail">Correo</label><input id="editEmail" maxlength="160" required="" type="email"/></div><div class="field"><label for="editProfile">Perfil</label><select id="editProfile"><option>Alumno</option><option>Colaborador</option><option>Alumni</option><option>Jubilado</option><option>Familiar</option><option>Externo</option></select></div><div class="field"><label for="editActivity">Actividad</label><select id="editActivity"><option value="Plática">Plática</option><option value="Recorrido">Recorrido</option><option value="Ambas">Ambas</option></select></div></div><p class="alert error" hidden="" id="editStatus"></p><div class="modal-footer"><button class="secondary" id="cancelEdit" type="button">Cancelar</button><button class="primary" type="submit">Guardar cambios</button></div></form></div></div>
 <div aria-hidden="true" id="epiPrint"></div>
+<script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
 <script>
 'use strict';
 // Clave pública de Supabase, protegida mediante políticas RLS; nunca usar una clave de servicio aquí.
@@ -811,7 +812,32 @@ $('registrationForm').addEventListener('submit',async e=>{
  }catch(err){notification('formStatus',err.message||'Error al registrar. Revisa tu conexión.',true)}
  finally{btn.disabled=false;btn.textContent='Confirmar registro →'}
 });
-$('printConfirm').onclick=()=>window.print();$('newRegister').onclick=()=>{$('registrationForm').reset();document.querySelectorAll('input[name="perfil"]').forEach(x=>x.checked=false);profileUpdate();$('formArea').hidden=false;$('successView').hidden=true;notification('formStatus','');$('healthResult').textContent='';$('nombre').focus();};
+
+async function downloadReceiptPDF(data){
+ if(!window.PDFLib)throw new Error('No se pudo cargar el generador PDF. Comprueba tu conexión a internet.');
+ const {PDFDocument,StandardFonts,rgb}=PDFLib,doc=await PDFDocument.create();
+ const page=doc.addPage([595.28,841.89]);const font=await doc.embedFont(StandardFonts.Helvetica),bold=await doc.embedFont(StandardFonts.HelveticaBold);
+ const dark=rgb(.17,.24,.19),olive=rgb(.28,.35,.26),gray=rgb(.43,.46,.42),white=rgb(1,1,1);
+ const clean=v=>String(v??'').replace(/[\r\n\t]+/g,' ').replace(/[\u2013\u2014]/g,'-').replace(/[\u2018\u2019]/g,"'").replace(/[\u201c\u201d]/g,'"').slice(0,240);
+ const line=(text,x,y,size=12,f=font,color=dark)=>page.drawText(clean(text),{x,y,size,font:f,color,maxWidth:480});
+ page.drawRectangle({x:0,y:718,width:595.28,height:124,color:olive});
+ line('UNIVERSIDAD PANAMERICANA',48,795,16,bold,white);
+ line('SALUD Y BIENESTAR | CAMPANA NO ES SOLO VAPOR',48,770,10,font,white);
+ line('17 DE NOVIEMBRE DE 2026',48,747,11,font,white);
+ line('Comprobante de inscripcion',48,676,25,bold,dark);
+ line('Tu salud, tu momento para decidir.',48,650,12,font,gray);
+ page.drawRectangle({x:45,y:529,width:505,height:95,color:rgb(.94,.96,.91),borderColor:rgb(.82,.86,.79),borderWidth:1});
+ line('FOLIO DE REGISTRO',65,596,11,bold,olive);
+ line(data.folio,65,549,35,bold,olive);
+ const fields=[['Participante',data.nombre],['Perfil',data.perfil],['Actividad',data.actividad],['Estado',data.estado||'Inscripcion registrada']];
+ fields.forEach(([key,value],i)=>{const y=482-i*49;line(key+':',48,y,12,bold,dark);line(value,175,y,12,font,dark);page.drawLine({start:{x:48,y:y-15},end:{x:548,y:y-15},thickness:.6,color:rgb(.86,.87,.83)})});
+ line('Este comprobante acredita el registro en la jornada, no la asistencia.',48,230,10,font,gray);
+ line('No es un diagnostico, resultado de espirometria ni constancia clinica.',48,213,10,font,gray);
+ line('UNIVERSIDAD PANAMERICANA | MEDICINA DE CAMPUS',48,75,9,bold,olive);
+ const bytes=await doc.save(),blob=new Blob([bytes],{type:'application/pdf'}),url=URL.createObjectURL(blob),a=document.createElement('a');
+ a.href=url;a.download='Comprobante_No_es_solo_vapor_'+clean(data.folio).replace(/[^a-zA-Z0-9_-]/g,'')+'.pdf';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),15000);
+}
+$('printConfirm').onclick=async()=>{const button=$('printConfirm');button.disabled=true;try{await downloadReceiptPDF({folio:$('showFolio').textContent,nombre:$('nombre').value.trim(),perfil:currentProfile(),actividad:document.querySelector('input[name="actividad"]:checked')?.value||'Ambas',estado:'Inscripcion registrada'})}catch(e){alert(e.message)}finally{button.disabled=false}};$('newRegister').onclick=()=>{$('registrationForm').reset();document.querySelectorAll('input[name="perfil"]').forEach(x=>x.checked=false);profileUpdate();$('formArea').hidden=false;$('successView').hidden=true;notification('formStatus','');$('healthResult').textContent='';$('nombre').focus();};
 async function adminFetch(path,options={}){
  if(!session?.access_token)throw Error('Sesión no iniciada.');
  const result=await fetch(DB+path,{...options,headers:{apikey:KEY,Authorization:'Bearer '+session.access_token,...(options.body?{'Content-Type':'application/json'}:{}),...options.headers}});
@@ -970,9 +996,9 @@ function findCheckins(){let q=$('checkinSearch').value.trim(),dst=$('checkinResu
 $('checkinSearch').addEventListener('input',findCheckins);
 $('checkinClear').onclick=()=>{$('checkinSearch').value='';findCheckins();$('checkinSearch').focus()};
 $('checkinResults').addEventListener('click',async e=>{const b=e.target.closest('[data-checkin-id]');if(!b||role!=='admin')return;const r=rows.find(x=>x.id===b.dataset.checkinId);if(!r)return;b.disabled=true;try{await adminFetch('/rest/v1/'+TABLE+'?id=eq.'+encodeURIComponent(r.id),{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify({asistencia_confirmada:!r.asistencia_confirmada,check_in_en:r.asistencia_confirmada?null:new Date().toISOString()})});await loadRows();}catch(err){alert('No se pudo guardar la asistencia: '+err.message)}finally{b.disabled=false}});
-function findReceipts(){const q=$('receiptSearch').value.trim(),dst=$('receiptResults');if(!q){dst.textContent='Escribe un nombre o folio para mostrar comprobantes.';return;}const rs=matchLookup(q);dst.innerHTML=rs.length?rs.map(r=>'<div class="lookup-item"><div><strong>'+safe(r.folio)+' · '+safe(r.nombre)+'</strong><small>'+safe(r.perfil)+' · '+safe(r.actividad)+'</small></div><div class="lookup-controls"><button type="button" class="secondary" data-receipt-id="'+safe(r.id)+'">Imprimir comprobante</button></div></div>').join(''):'No se encontraron inscripciones con esos datos.'}
+function findReceipts(){const q=$('receiptSearch').value.trim(),dst=$('receiptResults');if(!q){dst.textContent='Escribe un nombre o folio para mostrar comprobantes.';return;}const rs=matchLookup(q);dst.innerHTML=rs.length?rs.map(r=>'<div class="lookup-item"><div><strong>'+safe(r.folio)+' · '+safe(r.nombre)+'</strong><small>'+safe(r.perfil)+' · '+safe(r.actividad)+'</small></div><div class="lookup-controls"><button type="button" class="secondary" data-receipt-id="'+safe(r.id)+'">⬇ Descargar PDF</button></div></div>').join(''):'No se encontraron inscripciones con esos datos.'}
 $('receiptSearch').addEventListener('input',findReceipts);$('receiptClear').onclick=()=>{$('receiptSearch').value='';findReceipts();$('receiptSearch').focus()};
-$('receiptResults').addEventListener('click',e=>{let btn=e.target.closest('[data-receipt-id]');if(!btn||!session?.access_token)return;let r=rows.find(x=>x.id===btn.dataset.receiptId);if(!r)return;const box=$('receiptPrint');box.innerHTML='<div style="border-bottom:2px solid #4c654d;padding-bottom:12px"><strong>UNIVERSIDAD PANAMERICANA</strong><div>Salud y Bienestar · No es solo vapor · 2026</div></div><h1>Comprobante de inscripción</h1><p>Jornada de prevención de vapeo y cigarrillos · 17 de noviembre de 2026</p><div class="receipt-folio">'+safe(r.folio)+'</div><p><b>Participante:</b> '+safe(r.nombre)+'</p><p><b>Perfil:</b> '+safe(r.perfil)+'</p><p><b>Actividad:</b> '+safe(r.actividad)+'</p><p><b>Estado:</b> '+(r.asistencia_confirmada?'Asistencia documentada':'Inscripción registrada')+'</p><p style="margin-top:35px;font-size:11px">Este comprobante no representa constancia clínica ni diagnóstico respiratorio.</p>';document.body.classList.add('print-receipt');window.print();});
+$('receiptResults').addEventListener('click',e=>{let btn=e.target.closest('[data-receipt-id]');if(!btn||!session?.access_token)return;let r=rows.find(x=>x.id===btn.dataset.receiptId);if(!r)return;btn.disabled=true;downloadReceiptPDF({folio:r.folio,nombre:r.nombre,perfil:r.perfil,actividad:r.actividad,estado:r.asistencia_confirmada?'Asistencia documentada':'Inscripcion registrada'}).catch(ex=>alert(ex.message)).finally(()=>{btn.disabled=false});});
 window.addEventListener('afterprint',()=>{document.body.classList.remove('print-receipt');$('receiptPrint').innerHTML='';});
 function showAccount(){const email=session?.user?.email||'Cuenta autorizada';$('accountEmail').textContent=email;$('accountRole').textContent=role==='admin'?'Administración de la campaña':'Acceso de consulta';$('accountInitials').textContent=(email.split('@')[0].slice(0,2)||'UP').toUpperCase()}
 $('accountSignout').onclick=()=>{$('signout').click();consoleGo('resumen')};
