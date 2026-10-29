@@ -874,7 +874,7 @@ $('registrationForm').addEventListener('submit',async e=>{
 
 async function downloadReceiptPDF(data){
  if(!window.html2canvas||!window.jspdf?.jsPDF)throw new Error('No se cargó el generador del comprobante. Revisa la conexión a internet.');
- const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;':'&quot;',"'":'&#39;'}[c])).slice(0,180);
+ const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])).slice(0,180);
  const logo=selector=>document.querySelector(selector)?.getAttribute('src')||'';
  const logoUP=logo('.logo-institucion'),logoSalud=logo('.logo-salud'),logoAbraza=logo('.logo-abraza-header');
  const item=(title,value)=>'<div style="display:grid;grid-template-columns:155px 1fr;align-items:center;border-bottom:1px solid #d9ded4;padding:14px 5px"><div style="font:700 12px Arial,sans-serif;letter-spacing:2px;color:#5a6659">'+title+'</div><div style="font:18px Georgia,serif;color:#203e34;overflow-wrap:anywhere">'+esc(value)+'</div></div>';
