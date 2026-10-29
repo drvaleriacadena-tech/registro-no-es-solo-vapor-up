@@ -765,14 +765,17 @@ function drawHealth(p){
  const tobacco=document.createElement('div');tobacco.style.cssText='margin:16px 0;padding:16px;background:#e8eee3;border:1px solid #c9d4c5;border-radius:14px';
  tobacco.innerHTML='<h3 style="margin:0 0 8px;font:600 20px Georgia,serif">Índice tabáquico · paquetes-año</h3><p style="font-size:13px;margin:0 0 12px">Esta sección es para quienes han fumado cigarrillos convencionales alguna vez, aunque actualmente ya no fumen. No aplica a vapeadores. Cálculo: años fumados × cigarrillos diarios / 20.</p><label for="h_tobaccoEver" style="display:block;font-weight:650;margin-bottom:8px">¿Has fumado cigarrillos convencionales alguna vez?</label><select id="h_tobaccoEver" name="h_tobaccoEver" required style="width:100%;padding:10px;border-radius:8px"><option value="">Selecciona una respuesta</option><option value="Sí">Sí, actualmente o en el pasado</option><option value="No">Nunca</option><option value="Prefiero no responder">Prefiero no responder</option></select><div id="h_tobaccoDetails" hidden style="padding-top:12px"><label for="h_tobaccoYears" style="display:block;font-weight:650">Años totales en los que fumaste cigarrillos</label><input type="number" min="0.01" max="100" step="0.01" id="h_tobaccoYears" placeholder="Ej. 8" style="width:100%;padding:10px;margin:7px 0 12px;border-radius:8px;border:1px solid #cbd1c5"><label for="h_tobaccoDaily" style="display:block;font-weight:650">Promedio de cigarrillos fumados por día durante ese tiempo</label><input type="number" min="0.01" max="100" step="0.01" id="h_tobaccoDaily" placeholder="Ej. 10" style="width:100%;padding:10px;margin:7px 0 12px;border-radius:8px;border:1px solid #cbd1c5"><div id="h_tobaccoResult" aria-live="polite" style="font-weight:700;color:#354b36">Introduce ambos datos para calcular el índice.</div><p style="font-size:12px;margin-bottom:0">Si tu consumo ha variado mucho, el resultado será aproximado. Si prefieres no declarar las cantidades, utiliza la opción anterior.</p></div>';
  $('tobaccoPageSlot').replaceChildren(tobacco);
+ if(!$('tobaccoNotApplicable')){const note=document.createElement('p');note.id='tobaccoNotApplicable';note.style.cssText='padding:18px;background:#edf3e9;border-radius:12px';note.textContent='No necesitas calcular el índice tabáquico. Puedes finalizar tu registro.';$('tobaccoPageSlot').prepend(note);}
+ 
  const eligibility=document.createElement('div');eligibility.id='tobaccoEligibility';eligibility.style.cssText='margin:16px 0;padding:16px;background:#e8eee3;border:1px solid #c9d4c5;border-radius:14px';
  const selector=$('h_tobaccoEver'),question=selector.previousElementSibling;
  eligibility.append(question,selector);root.append(eligibility);
  $('h_tobaccoEver').addEventListener('change',()=>{
- const yes=$('h_tobaccoEver').value==='Sí';$('h_tobaccoDetails').hidden=!yes;$('h_tobaccoYears').required=yes;$('h_tobaccoDaily').required=yes;if(!yes){$('h_tobaccoYears').value='';$('h_tobaccoDaily').value='';}
+ const yes=$('h_tobaccoEver').value==='Sí';$('tobaccoPageSlot').querySelector('#tobaccoNotApplicable').hidden=yes;tobacco.hidden=!yes;$('h_tobaccoDetails').hidden=!yes;$('h_tobaccoYears').required=yes;$('h_tobaccoDaily').required=yes;if(!yes){$('h_tobaccoYears').value='';$('h_tobaccoDaily').value='';}
  });
  const recalc=()=>{const y=Number($('h_tobaccoYears').value),d=Number($('h_tobaccoDaily').value);$('h_tobaccoResult').textContent=y>0&&d>0&&y<=100&&d<=100?'Tu índice tabáquico estimado: '+((y*d)/20).toFixed(2)+' paquetes-año':'Introduce ambos datos para calcular el índice.';};
  $('h_tobaccoYears').addEventListener('input',recalc);$('h_tobaccoDaily').addEventListener('input',recalc);
+ $('tobaccoPageSlot').querySelector('#tobaccoNotApplicable').hidden=false;tobacco.hidden=true;
  $('healthConsent').checked=false;
 }
 function getHealthAnswers(p){const out={};for(const [key] of healthQuestions[healthGroup(p)])out[key]=$('h_'+key)?.value||'';
@@ -807,7 +810,7 @@ const wizardNames=['Perfil de participante','Datos personales','Actividades','Sa
 function yearsOld(iso){if(!iso)return null;const d=new Date(iso+'T12:00:00'),now=new Date();if(!Number.isFinite(d.getTime())||d>now)return null;let age=now.getFullYear()-d.getFullYear();if(now.getMonth()<d.getMonth()||(now.getMonth()===d.getMonth()&&now.getDate()<d.getDate()))age--;return age;}
 $('fechaNacimiento').addEventListener('change',()=>{const age=yearsOld($('fechaNacimiento').value);$('edadPreview').value=age===null?'Fecha inválida':age+' años';});
 function hasTobaccoStep(){return $('h_tobaccoEver')?.value==='Sí';}
-function visibleSteps(){return hasTobaccoStep()?[0,1,2,3,4]:[0,1,2,3];}
+function visibleSteps(){return [0,1,2,3,4];}
 function initWizard(){
  const form=$('registrationForm'),all=Array.from(form.children),kickers=all.filter(x=>x.dataset.step);
  kickers.forEach((start,i)=>{const first=all.indexOf(start),end=i+1<kickers.length?all.indexOf(kickers[i+1]):all.indexOf($('wizardNav'));const wrapper=document.createElement('div');wrapper.className='wizard-page';wrapper.dataset.wizard=i;start.before(wrapper);all.slice(first,end).forEach(node=>wrapper.append(node));});
@@ -817,7 +820,7 @@ function initWizard(){
  const page=form.querySelector('.wizard-page[data-wizard="'+wizardStep+'"]');
  if(wizardStep===0&&!currentProfile()){alert('Selecciona tu perfil para continuar.');return;}
  if(wizardStep===1&&yearsOld($('fechaNacimiento').value)===null){$('fechaNacimiento').reportValidity();return;}
- for(const field of page.querySelectorAll('[required]')){if(!field.checkValidity()){field.reportValidity();return;}}
+ for(const field of page.querySelectorAll('[required]')){if(field.closest('[hidden]'))continue;if(!field.checkValidity()){field.reportValidity();return;}}
  const steps=visibleSteps();displayWizard(steps[Math.min(steps.length-1,steps.indexOf(wizardStep)+1)]);
  };
  displayWizard(0);
@@ -838,7 +841,7 @@ function newId(){if(globalThis.crypto?.randomUUID)return crypto.randomUUID();let
 $('registrationForm').addEventListener('submit',async e=>{
  e.preventDefault();notification('formStatus','');const p=currentProfile();
  if(!p){notification('formStatus','Selecciona el tipo de participante.',true);$('profileGrid').scrollIntoView({behavior:'smooth',block:'center'});return;}
- for(const field of $('registrationForm').querySelectorAll('[required]')){if(!field.checkValidity()){const page=field.closest('.wizard-page');if(page&&!page.hidden)displayWizard(Number(page.dataset.wizard));else if(page&&page.hidden){notification('formStatus','Revisa los campos del cuestionario antes de continuar.',true);return;}field.reportValidity();return;}}
+ for(const field of $('registrationForm').querySelectorAll('[required]')){if(field.closest('[hidden]'))continue;if(!field.checkValidity()){const page=field.closest('.wizard-page');if(page)displayWizard(Number(page.dataset.wizard));field.reportValidity();return;}}
  const healthAnswers=getHealthAnswers(p);
  const nombre=$('nombre').value.trim(),correo=$('correo').value.trim().toLowerCase();
  if(nombre.length<3){notification('formStatus','Ingresa tu nombre completo.',true);return;}
