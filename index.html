@@ -651,6 +651,7 @@ body.print-epi #epiPrint .rp-signature{padding:18px 0}
 </section>
 <section class="console-page" hidden="" id="console-estadisticas">
 <div class="module-head"><div><h3>Indicadores y estadísticas</h3><p>Análisis descriptivo de registros y asistencias; evita interpretar estos datos como prevalencia de consumo.</p></div><span class="module-chip">Actualizable</span></div>
+<section class="panel" style="margin:22px 0;padding:22px" aria-label="Epidemiología del tabaquismo"><h3>Índice tabáquico · análisis agregado</h3><p class="muted">Respuestas voluntariamente declaradas durante el registro. No representan la prevalencia de toda la comunidad UP y no se relacionan con nombres ni folios.</p><button class="secondary" type="button" id="refreshTobacco">↻ Actualizar índice tabáquico</button><p id="tobaccoStatus" class="muted" role="status">Selecciona actualizar para consultar la encuesta.</p><div id="tobaccoStats" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:12px;margin:15px 0"></div><div id="tobaccoGroups" style="display:grid;gap:8px"></div><p class="muted" style="font-size:12px">Paquetes-año = cigarrillos diarios × años de consumo / 20. Los grupos son intervalos descriptivos de exposición, no categorías clínicas de daño pulmonar.</p></section>
 <div class="stats-summary"><div><small>Alcance registrado</small><strong id="statsReach">—</strong></div><div><small>Asistencia efectiva</small><strong id="statsAttendance">—</strong></div><div><small>Porcentaje de asistencia</small><strong id="statsRate">—</strong></div></div>
 <div class="admin-duo"><section class="panel"><h3>Participantes por perfil</h3><div class="muted" id="profileBars">Sin datos cargados</div></section><section class="panel"><h3>Inscripciones por actividad</h3><div class="muted" id="activityBars">Sin datos cargados</div></section></div><div class="admin-duo extra-charts"><section class="panel"><h3>Alumnos por facultad</h3><div class="muted" id="facultyBars">Sin datos cargados</div></section><section class="panel"><h3>Asistencia por perfil</h3><div class="muted" id="attendanceBars">Sin datos cargados</div></section></div>
 <div class="notice-yellow"><strong>Nota metodológica.</strong> La inscripción en una actividad no demuestra que la persona haya completado esa estación. Para medirlo se necesitaría un registro específico por actividad.</div>
@@ -989,12 +990,29 @@ $('epiSave').onclick=epiSave;$('epiReload').onclick=epiLoad;$('epiUploadBtn').on
 
 // Navegación por interfaces del panel. La autorización real se verifica en Supabase.
 const consoleNames={resumen:['Resumen de la jornada','Indicadores y seguimiento de la campaña de salud respiratoria.'],checkin:['Check-in de la jornada','Confirma la asistencia de cada participante de forma individual.'],participantes:['Participantes','Consulta y administra la base de registros.'],comprobantes:['Comprobantes','Localiza y emite constancias de inscripción.'],estadisticas:['Estadísticas','Distribución de registros y asistencias por perfil y actividad.'],evidencias:['Evidencia fotográfica','Galería privada de la jornada de prevención.'],reporte:['Reporte epidemiológico final','Informe ejecutivo descriptivo para la Jefatura de Salud y Bienestar.'],'editar-reporte':['Editar reporte epidemiológico','Modifica los textos de la jornada y guárdalos en la base de datos.'],cuenta:['Mi cuenta y seguridad','Consulta los permisos activos y protege los datos de los participantes.']};
+async function refreshTobaccoStats(){
+ const status=$('tobaccoStatus'),stats=$('tobaccoStats'),groups=$('tobaccoGroups');
+ if(!session?.access_token){status.textContent='Inicia sesión para ver las estadísticas.';return;}
+ status.textContent='Consultando respuestas agrupadas...';stats.replaceChildren();groups.replaceChildren();
+ try{
+ let data=[],offset=0;while(true){const batch=await adminFetch('/rest/v1/vapor_encuesta_anonima_2026?select=perfil,respuestas&limit=500&offset='+offset);data.push(...batch);if(batch.length<500)break;offset+=500;if(offset>=100000)break;}
+ const yes=data.filter(x=>x.respuestas?.tabaquismo_alguna_vez==='Sí');
+ const valid=yes.map(x=>Number(x.respuestas?.indice_tabaquico_paquetes_anio)).filter((v,i)=>Number.isFinite(v)&&v>=0&&yes[i]?.respuestas?.indice_tabaquico_paquetes_anio!==undefined);
+ const bands=[['Menos de 5',0,5],['5 a menos de 10',5,10],['10 a menos de 20',10,20],['20 o más',20,Infinity]];
+ const boxes=[['Encuestas recibidas',data.length],['Antecedente declarado de tabaquismo',yes.length],['Índice calculable',valid.length],['Sin índice calculable',yes.length-valid.length]];
+ boxes.forEach(([label,n])=>{const box=document.createElement('div');box.style.cssText='background:#f1f5ec;border:1px solid #dfe6d8;border-radius:12px;padding:15px';const num=document.createElement('strong');num.style.cssText='font-size:25px;display:block';num.textContent=String(n);const caption=document.createElement('small');caption.textContent=label;box.append(num,caption);stats.append(box);});
+ if(valid.length){bands.forEach(([title,lo,hi])=>{const count=valid.filter(v=>v>=lo&&v<hi).length;const el=document.createElement('div');el.style.cssText='border-radius:10px;background:#f5f6ef;padding:10px 13px';const pct=Math.round(count/valid.length*100);el.textContent=title+' paquetes-año: '+count+' ('+pct+'% de índices calculables)';groups.append(el);});}
+ else groups.textContent='Aún no hay índices tabáquicos calculables.';
+ status.textContent='Resultados actualizados. Las respuestas no contienen nombre, correo ni folio.';
+ }catch(e){status.textContent='No se pudieron cargar las estadísticas: '+e.message;}
+}
+$('refreshTobacco').addEventListener('click',refreshTobaccoStats);
 function consoleGo(key,updateUrl=true){
  if(!consoleNames[key])return;
  document.querySelectorAll('.console-page').forEach(x=>x.hidden=x.id!=='console-'+key);
  document.querySelectorAll('.console-nav-btn').forEach(b=>{let active=b.dataset.consoleTarget===key;b.classList.toggle('active',active);b.setAttribute('aria-current',active?'page':'false')});
  $('consoleCurrentTitle').textContent=consoleNames[key][0];$('consoleCurrentCaption').textContent=consoleNames[key][1];
- if(key==='checkin')findCheckins();if(key==='comprobantes')findReceipts();if(key==='reporte')renderEpiPreview();if(key==='cuenta')showAccount();if(key==='evidencias')updatePhotoCount();
+ if(key==='estadisticas')refreshTobaccoStats();if(key==='checkin')findCheckins();if(key==='comprobantes')findReceipts();if(key==='reporte')renderEpiPreview();if(key==='cuenta')showAccount();if(key==='evidencias')updatePhotoCount();
  if(updateUrl){const path='#panel/'+key;if(location.hash!==path)history.pushState({},'',path)}
  window.scrollTo({top:0,left:0,behavior:'instant'});
  const ws=document.querySelector('.console-workspace');if(ws)ws.scrollTop=0;
