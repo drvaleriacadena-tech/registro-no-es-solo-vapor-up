@@ -582,13 +582,13 @@ body.print-epi #epiPrint .rp-signature{padding:18px 0}
 <section id="healthSection" style="background:#f4f7f0;border:1px solid #d9dfd0;border-radius:17px;padding:20px;margin:16px 0">
  <p style="margin:0 0 8px;font-weight:700;font:600 23px Georgia,serif;color:#33452f">¿Cómo cuidas tus pulmones?</p>
  <p style="font-size:13px;color:#5e6759">Responde las 5 preguntas para completar tu inscripción. Puedes seleccionar «Prefiero no responder» en cada pregunta. Tu participación en la campaña no depende de revelar tus hábitos. Las respuestas se guardan por separado, sin nombre, correo ni folio.</p>
- <div id="healthQuestions" aria-live="polite"></div>
+ <div id="healthQuestions" aria-live="polite"></div><div id="respiratoryCard" style="margin-top:17px;padding:18px;background:#fff;border:1px solid #d8dfd2;border-radius:16px;text-align:center"><div aria-hidden="true" style="font-size:42px">🫁</div><h3 style="font:600 23px Georgia,serif;color:#354b36;margin:5px 0 8px">Cada respiración cuenta.</h3><p style="font-size:14px;margin:0;color:#586657">Conoce tus hábitos · Previene riesgos · Respira mejor</p><p style="font-weight:700;font-size:14px;color:#354b36;margin:12px 0 0">No es solo vapor: cada decisión cuenta.</p></div>
  <label style="display:flex;gap:9px;font-size:13px;align-items:flex-start;margin-top:13px"><input id="healthConsent" type="checkbox" required style="margin-top:4px"> <span>He leído la información sobre esta encuesta y comprendo que mis respuestas se usarán únicamente para estadísticas agregadas. Puedo elegir «Prefiero no responder».</span></label>
 </section>
 <label class="consent"><input id="consent" required="" type="checkbox"/><span>He leído el <a href="https://www.up.edu.mx/aviso-de-privacidad/" rel="noopener noreferrer" target="_blank">Aviso de Privacidad de la Universidad Panamericana</a> y acepto el tratamiento de mis datos para este registro.</span></label>
 <div aria-live="polite" class="alert" hidden="" id="formStatus" role="status"></div>
 <button class="primary w100" id="saveRegister" type="submit">Confirmar registro →</button>
-<div class="minor">Registro y cuestionario preventivo · Respuestas de hábitos almacenadas por separado</div>
+<div class="minor">Puedes utilizar el mismo correo para registrar a varios participantes. Cada persona recibirá un folio diferente.</div>
 </form></div>
 <section aria-label="Registro exitoso" class="success" hidden="" id="successView"><div class="circle">✓</div><h2>¡Registro exitoso!</h2><p>Tu inscripción quedó guardada. Conserva este folio para identificarte el día de la jornada.</p><div class="code" id="showFolio"></div><p id="showSummary"></p><div id="healthResult" style="background:#f2f5ec;border:1px solid #dce3d5;border-radius:14px;padding:17px;margin:15px 0;text-align:left"></div><div class="actions"><button class="secondary" id="printConfirm" type="button">⬇ Descargar comprobante PDF</button><button class="primary" id="newRegister" type="button">Nuevo registro</button></div></section>
 
@@ -795,6 +795,7 @@ function profileUpdate(){
  drawHealth(p);
 }
 document.querySelectorAll('input[name="perfil"]').forEach(x=>x.onchange=profileUpdate);
+profileUpdate();
 function notification(id,msg,error=false){let el=$(id);el.hidden=!msg;el.textContent=msg;el.className='alert '+(error?'error':'info');}
 function newId(){if(globalThis.crypto?.randomUUID)return crypto.randomUUID();let b=new Uint8Array(16);crypto.getRandomValues(b);b[6]=(b[6]&15)|64;b[8]=(b[8]&63)|128;return [...b].map((v,i)=>v.toString(16).padStart(2,'0')+([3,5,7,9].includes(i)?'-':'')).join('');}
 $('registrationForm').addEventListener('submit',async e=>{
@@ -810,7 +811,7 @@ $('registrationForm').addEventListener('submit',async e=>{
  let btn=$('saveRegister');btn.disabled=true;btn.textContent='Guardando inscripción…';
  try{
    const res=await fetch(DB+'/rest/v1/rpc/registrar_vapor_2026',{method:'POST',headers:{apikey:KEY,'Content-Type':'application/json'},body:JSON.stringify(payload)});
-   if(!res.ok){const err=await res.json().catch(()=>({}));if(err?.code==='23505'||res.status===409)throw Error('Este correo ya tiene un registro. Solicita apoyo a Medicina de Campus para recuperar tu folio.');throw Error('No fue posible guardar la inscripción. '+(err?.code==='23514'?'Revisa los datos ingresados.':'Inténtalo nuevamente.'));}
+   if(!res.ok){const err=await res.json().catch(()=>({}));if(err?.code==='23505'||res.status===409)throw Error('No se pudo generar un folio único. Inténtalo nuevamente.');throw Error('No fue posible guardar la inscripción. '+(err?.code==='23514'?'Revisa los datos ingresados.':'Inténtalo nuevamente.'));}
    const folio=await res.json();
    if(typeof folio!=='string'||!/^\d{3,}$/.test(folio))throw Error('El servidor no devolvió un folio válido.');
    $('showFolio').textContent=folio;$('showSummary').textContent=nombre+' · '+p+' · '+(activity==='Ambas'?'Plática y estaciones':activity==='Plática'?'Plática':'Estaciones');
