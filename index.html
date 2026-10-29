@@ -553,7 +553,7 @@ body.print-epi #epiPrint .rp-signature{padding:18px 0}
 <div class="layout">
 <div class="panel">
 <div id="formArea"><div class="form-head"><div><h2>Registro de participantes</h2><p class="form-subhead">Completa tus datos para reservar tu lugar.</p></div></div>
-<form id="registrationForm" novalidate="">
+<div id="wizardProgress" style="font-weight:700;color:#496046;margin:8px 0 12px">Paso 1 de 4 · Perfil</div><div style="height:7px;border-radius:10px;background:#edf0e6;margin:0 0 20px"><div id="wizardBar" style="height:100%;width:25%;background:#50674b;border-radius:10px;transition:width .2s"></div></div><form id="registrationForm" novalidate="">
 <div class="section-kicker" data-step="01">¿Cómo participas?</div>
 <div class="profile-grid" id="profileGrid">
 <label class="profile"><input name="perfil" required="" type="radio" value="Alumno"/><span class="tile"><svg fill="none" stroke="currentColor" stroke-width="1.8" viewbox="0 0 24 24"><path d="m2 9 10-5 10 5-10 5L2 9Zm4 2v6c3 2.5 9 3 12 0v-6M22 9v7"></path></svg><span>Alumno/a</span></span></label>
@@ -567,7 +567,7 @@ body.print-epi #epiPrint .rp-signature{padding:18px 0}
 <div class="fields">
 <div class="field"><label for="nombre">Nombre completo *</label><input autocomplete="name" id="nombre" maxlength="120" placeholder="Nombre y apellidos" required=""/></div>
 <div class="field"><label for="correo">Correo electrónico *</label><input autocomplete="email" id="correo" maxlength="160" placeholder="correo@ejemplo.com" required="" type="email"/></div>
-<div class="field full" hidden="" id="facultadWrap"><label for="facultad">Facultad *</label><select id="facultad"><option value="">Selecciona tu facultad</option><option>Derecho</option><option>Empresariales</option><option>Ingeniería</option><option>Comunicación</option><option>Psicología y Pedagogía</option><option>ESDAI</option><option>Humanidades</option><option>Posgrado</option><option>Otra</option></select></div>
+<div class="field"><label for="fechaNacimiento">Fecha de nacimiento *</label><input type="date" id="fechaNacimiento" required max="2026-10-29"/></div><div class="field"><label for="edadPreview">Edad calculada</label><input type="text" id="edadPreview" readonly placeholder="Se calculará automáticamente"/></div><div class="field full" hidden="" id="facultadWrap"><label for="facultad">Facultad *</label><select id="facultad"><option value="">Selecciona tu facultad</option><option>Derecho</option><option>Empresariales</option><option>Ingeniería</option><option>Comunicación</option><option>Psicología y Pedagogía</option><option>ESDAI</option><option>Humanidades</option><option>Posgrado</option><option>Otra</option></select></div>
 <div class="field full" hidden="" id="departamentoWrap"><label for="departamento">Departamento / área *</label><input id="departamento" maxlength="100" placeholder="Ej. Talento, Deportes, Ingeniería"/></div>
 <div class="field full" hidden="" id="detalleWrap"><label for="detalle" id="detalleLabel">Información adicional (opcional)</label><input id="detalle" maxlength="100" placeholder=""/></div>
 <div class="field full" hidden="" id="parentescoWrap"><label for="parentesco">Parentesco (opcional)</label><select id="parentesco"><option value="">Selecciona</option><option>Padre / madre</option><option>Hijo/a</option><option>Pareja</option><option>Hermano/a</option><option>Otro familiar</option></select></div>
@@ -587,7 +587,7 @@ body.print-epi #epiPrint .rp-signature{padding:18px 0}
 </section>
 <label class="consent"><input id="consent" required="" type="checkbox"/><span>He leído el <a href="https://www.up.edu.mx/aviso-de-privacidad/" rel="noopener noreferrer" target="_blank">Aviso de Privacidad de la Universidad Panamericana</a> y acepto el tratamiento de mis datos para este registro.</span></label>
 <div aria-live="polite" class="alert" hidden="" id="formStatus" role="status"></div>
-<button class="primary w100" id="saveRegister" type="submit">Confirmar registro →</button>
+<div id="wizardNav" style="display:flex;gap:12px;margin:18px 0"><button type="button" class="secondary" id="wizardBack">← Anterior</button><button type="button" class="primary" id="wizardNext" style="flex:1">Siguiente →</button></div><button class="primary w100" id="saveRegister" type="submit">Confirmar registro →</button>
 <div class="minor">Puedes utilizar el mismo correo para registrar a varios participantes. Cada persona recibirá un folio diferente.</div>
 </form></div>
 <section aria-label="Registro exitoso" class="success" hidden="" id="successView"><div class="circle">✓</div><h2>¡Registro exitoso!</h2><p>Tu inscripción quedó guardada. Conserva este folio para identificarte el día de la jornada.</p><div class="code" id="showFolio"></div><p id="showSummary"></p><div id="healthResult" style="background:#f2f5ec;border:1px solid #dce3d5;border-radius:14px;padding:17px;margin:15px 0;text-align:left"></div><div class="actions"><button class="secondary" id="printConfirm" type="button">⬇ Descargar comprobante PDF</button><button class="primary" id="newRegister" type="button">Nuevo registro</button></div></section>
@@ -653,7 +653,7 @@ body.print-epi #epiPrint .rp-signature{padding:18px 0}
 <div class="module-head"><div><h3>Indicadores y estadísticas</h3><p>Análisis descriptivo de registros y asistencias; evita interpretar estos datos como prevalencia de consumo.</p></div><span class="module-chip">Actualizable</span></div>
 <section class="panel" style="margin:22px 0;padding:22px" aria-label="Epidemiología del tabaquismo"><h3>Índice tabáquico · análisis agregado</h3><p class="muted">Respuestas voluntariamente declaradas durante el registro. No representan la prevalencia de toda la comunidad UP y no se relacionan con nombres ni folios.</p><button class="secondary" type="button" id="refreshTobacco">↻ Actualizar índice tabáquico</button><p id="tobaccoStatus" class="muted" role="status">Selecciona actualizar para consultar la encuesta.</p><div id="tobaccoStats" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:12px;margin:15px 0"></div><div id="tobaccoGroups" style="display:grid;gap:8px"></div><p class="muted" style="font-size:12px">Paquetes-año = cigarrillos diarios × años de consumo / 20. Los grupos son intervalos descriptivos de exposición, no categorías clínicas de daño pulmonar.</p></section>
 <div class="stats-summary"><div><small>Alcance registrado</small><strong id="statsReach">—</strong></div><div><small>Asistencia efectiva</small><strong id="statsAttendance">—</strong></div><div><small>Porcentaje de asistencia</small><strong id="statsRate">—</strong></div></div>
-<div class="admin-duo"><section class="panel"><h3>Participantes por perfil</h3><div class="muted" id="profileBars">Sin datos cargados</div></section><section class="panel"><h3>Inscripciones por actividad</h3><div class="muted" id="activityBars">Sin datos cargados</div></section></div><div class="admin-duo extra-charts"><section class="panel"><h3>Alumnos por facultad</h3><div class="muted" id="facultyBars">Sin datos cargados</div></section><section class="panel"><h3>Asistencia por perfil</h3><div class="muted" id="attendanceBars">Sin datos cargados</div></section></div>
+<section class="panel" style="padding:20px;margin:18px 0"><h3>Distribución de registros por edad</h3><p class="muted">Edad calculada desde la fecha de nacimiento. Los registros anteriores pueden aparecer sin edad.</p><div id="ageStats">Sin datos disponibles</div></section><div class="admin-duo"><section class="panel"><h3>Participantes por perfil</h3><div class="muted" id="profileBars">Sin datos cargados</div></section><section class="panel"><h3>Inscripciones por actividad</h3><div class="muted" id="activityBars">Sin datos cargados</div></section></div><div class="admin-duo extra-charts"><section class="panel"><h3>Alumnos por facultad</h3><div class="muted" id="facultyBars">Sin datos cargados</div></section><section class="panel"><h3>Asistencia por perfil</h3><div class="muted" id="attendanceBars">Sin datos cargados</div></section></div>
 <div class="notice-yellow"><strong>Nota metodológica.</strong> La inscripción en una actividad no demuestra que la persona haya completado esa estación. Para medirlo se necesitaría un registro específico por actividad.</div>
 </section>
 <section class="console-page" hidden="" id="console-evidencias">
@@ -796,6 +796,30 @@ function profileUpdate(){
 }
 document.querySelectorAll('input[name="perfil"]').forEach(x=>x.onchange=profileUpdate);
 profileUpdate();
+
+let wizardStep=0;const wizardNames=['Perfil de participante','Datos personales','Actividades','Salud respiratoria'];
+function yearsOld(iso){if(!iso)return null;const d=new Date(iso+'T12:00:00'),now=new Date();if(!Number.isFinite(d.getTime())||d>now)return null;let age=now.getFullYear()-d.getFullYear();if(now.getMonth()<d.getMonth()||(now.getMonth()===d.getMonth()&&now.getDate()<d.getDate()))age--;return age;}
+$('fechaNacimiento').addEventListener('change',()=>{const age=yearsOld($('fechaNacimiento').value);$('edadPreview').value=age===null?'Fecha inválida':age+' años';});
+function initWizard(){
+ const form=$('registrationForm'),all=Array.from(form.children),kickers=all.filter(x=>x.dataset.step);
+ const parts=kickers.map((start,i)=>{const end=i+1<kickers.length?all.indexOf(kickers[i+1]):all.indexOf($('wizardNav'));return all.slice(all.indexOf(start),end)});
+ for(let i=0;i<parts.length;i++){const wrapper=document.createElement('div');wrapper.className='wizard-page';wrapper.dataset.wizard=i;parts[i][0].before(wrapper);parts[i].forEach(node=>wrapper.append(node));}
+ $('wizardBack').onclick=()=>displayWizard(wizardStep-1);
+ $('wizardNext').onclick=()=>{
+ const page=form.querySelector('.wizard-page[data-wizard="'+wizardStep+'"]');
+ if(wizardStep===0&&!currentProfile()){alert('Selecciona tu perfil para continuar.');return;}
+ if(wizardStep===1){const required=page.querySelectorAll('[required]');for(const field of required){if(!field.checkValidity()){field.reportValidity();return;}}if(yearsOld($('fechaNacimiento').value)===null){$('fechaNacimiento').reportValidity();return;}}
+ displayWizard(wizardStep+1);
+ };
+ displayWizard(0);
+}
+function displayWizard(n){
+ wizardStep=Math.max(0,Math.min(3,n));document.querySelectorAll('.wizard-page').forEach(x=>x.hidden=Number(x.dataset.wizard)!==wizardStep);
+ $('wizardProgress').textContent='Paso '+(wizardStep+1)+' de 4 · '+wizardNames[wizardStep];
+ $('wizardBar').style.width=((wizardStep+1)*25)+'%';$('wizardBack').hidden=wizardStep===0;$('wizardNext').hidden=wizardStep===3;$('saveRegister').hidden=wizardStep!==3;
+ document.querySelector('.form-head').scrollIntoView({block:'start',behavior:'smooth'});
+}
+initWizard();
 function notification(id,msg,error=false){let el=$(id);el.hidden=!msg;el.textContent=msg;el.className='alert '+(error?'error':'info');}
 function newId(){if(globalThis.crypto?.randomUUID)return crypto.randomUUID();let b=new Uint8Array(16);crypto.getRandomValues(b);b[6]=(b[6]&15)|64;b[8]=(b[8]&63)|128;return [...b].map((v,i)=>v.toString(16).padStart(2,'0')+([3,5,7,9].includes(i)?'-':'')).join('');}
 $('registrationForm').addEventListener('submit',async e=>{
@@ -807,10 +831,10 @@ $('registrationForm').addEventListener('submit',async e=>{
  if(nombre.length<3){notification('formStatus','Ingresa tu nombre completo.',true);return;}
  const activity=document.querySelector('input[name="actividad"]:checked').value;
  const detail=p==='Familiar'?$('parentesco').value||null:['Alumni','Jubilado','Externo'].includes(p)?$('detalle').value.trim()||null:null;
- const payload={p_nombre:nombre,p_correo:correo,p_perfil:p,p_actividad:activity,p_facultad:p==='Alumno'?$('facultad').value:null,p_departamento:p==='Colaborador'?$('departamento').value.trim():null,p_detalle_perfil:detail};
+ const payload={p_nombre:nombre,p_correo:correo,p_perfil:p,p_actividad:activity,p_fecha_nacimiento:$('fechaNacimiento').value,p_facultad:p==='Alumno'?$('facultad').value:null,p_departamento:p==='Colaborador'?$('departamento').value.trim():null,p_detalle_perfil:detail};
  let btn=$('saveRegister');btn.disabled=true;btn.textContent='Guardando inscripción…';
  try{
-   const res=await fetch(DB+'/rest/v1/rpc/registrar_vapor_2026',{method:'POST',headers:{apikey:KEY,'Content-Type':'application/json'},body:JSON.stringify(payload)});
+   const res=await fetch(DB+'/rest/v1/rpc/registrar_vapor_con_edad_2026',{method:'POST',headers:{apikey:KEY,'Content-Type':'application/json'},body:JSON.stringify(payload)});
    if(!res.ok){const err=await res.json().catch(()=>({}));if(err?.code==='23505'||res.status===409)throw Error('No se pudo generar un folio único. Inténtalo nuevamente.');throw Error('No fue posible guardar la inscripción. '+(err?.code==='23514'?'Revisa los datos ingresados.':'Inténtalo nuevamente.'));}
    const folio=await res.json();
    if(typeof folio!=='string'||!/^\d{3,}$/.test(folio))throw Error('El servidor no devolvió un folio válido.');
@@ -856,7 +880,7 @@ async function downloadReceiptPDF(data){
  const bytes=await doc.save(),blob=new Blob([bytes],{type:'application/pdf'}),url=URL.createObjectURL(blob),a=document.createElement('a');
  a.href=url;a.download='Comprobante_No_es_solo_vapor_'+clean(data.folio).replace(/[^a-zA-Z0-9_-]/g,'')+'.pdf';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),15000);
 }
-$('printConfirm').onclick=async()=>{const button=$('printConfirm');button.disabled=true;try{await downloadReceiptPDF({folio:$('showFolio').textContent,nombre:$('nombre').value.trim(),perfil:currentProfile(),actividad:document.querySelector('input[name="actividad"]:checked')?.value||'Ambas',estado:'Inscripcion registrada'})}catch(e){alert(e.message)}finally{button.disabled=false}};$('newRegister').onclick=()=>{$('registrationForm').reset();document.querySelectorAll('input[name="perfil"]').forEach(x=>x.checked=false);profileUpdate();$('formArea').hidden=false;$('successView').hidden=true;notification('formStatus','');$('healthResult').textContent='';$('nombre').focus();};
+$('printConfirm').onclick=async()=>{const button=$('printConfirm');button.disabled=true;try{await downloadReceiptPDF({folio:$('showFolio').textContent,nombre:$('nombre').value.trim(),perfil:currentProfile(),actividad:document.querySelector('input[name="actividad"]:checked')?.value||'Ambas',estado:'Inscripcion registrada'})}catch(e){alert(e.message)}finally{button.disabled=false}};$('newRegister').onclick=()=>{$('registrationForm').reset();document.querySelectorAll('input[name="perfil"]').forEach(x=>x.checked=false);profileUpdate();$('formArea').hidden=false;$('successView').hidden=true;displayWizard(0);notification('formStatus','');$('healthResult').textContent='';$('nombre').focus();};
 async function adminFetch(path,options={}){
  if(!session?.access_token)throw Error('Sesión no iniciada.');
  const result=await fetch(DB+path,{...options,headers:{apikey:KEY,Authorization:'Bearer '+session.access_token,...(options.body?{'Content-Type':'application/json'}:{}),...options.headers}});
@@ -879,10 +903,17 @@ $('loginForm').addEventListener('submit',async e=>{
 $('signout').onclick=()=>{session=null;role='';rows=[];$('dashboardView').hidden=true;$('loginView').hidden=false;$('tableBody').innerHTML='';$('adminStatus').textContent='';$('adminPassword').value='';};
 async function loadRows(){
  $('adminStatus').textContent='Actualizando registros…';
- try{let data=[],offset=0;while(true){let batch=await adminFetch('/rest/v1/'+TABLE+'?select=*&order=registrado_en.desc&limit=1000&offset='+offset);data.push(...batch);if(batch.length<1000)break;offset+=1000;if(offset>=20000)break;}rows=data;draw();$('adminStatus').textContent=rows.length+' registros cargados.';}
+ try{let data=[],offset=0;while(true){let batch=await adminFetch('/rest/v1/'+TABLE+'?select=*&order=registrado_en.desc&limit=1000&offset='+offset);data.push(...batch);if(batch.length<1000)break;offset+=1000;if(offset>=20000)break;}rows=data;draw();renderAgeStats();$('adminStatus').textContent=rows.length+' registros cargados.';}
  catch(ex){$('adminStatus').textContent='Error al cargar registros: '+ex.message;}
 }
 $('refresh').onclick=loadRows;
+function renderAgeStats(){
+ const groups=[['Menores de 18',0,18],['18 a 24',18,25],['25 a 34',25,35],['35 a 44',35,45],['45 a 54',45,55],['55 a 64',55,65],['65 o más',65,200]];
+ const valid=rows.map(r=>yearsOld(r.fecha_nacimiento)).filter(n=>n!==null&&n>=0);
+ const values=groups.map(([label,min,max])=>({label,n:valid.filter(n=>n>=min&&n<max).length}));
+ const highest=Math.max(1,...values.map(x=>x.n));
+ $('ageStats').innerHTML=values.map(x=>'<div class="barrow"><span>'+safe(x.label)+'</span><div class="barbg"><i style="width:'+(x.n/highest*100)+'%"></i></div><b>'+x.n+'</b></div>').join('')+'<p class="muted">Con fecha registrada: '+valid.length+' · Sin fecha: '+(rows.length-valid.length)+'</p>';
+}
 function barGraph(target,field,categories){let data=Object.fromEntries(categories.map(x=>[x,0]));for(const r of rows)if(data[r[field]]!==undefined)data[r[field]]++;let max=Math.max(1,...Object.values(data));$(target).innerHTML=categories.map(name=>'<div class="barrow"><span>'+safe(name)+'</span><div class="barbg"><i style="width:'+(100*data[name]/max)+'%"></i></div><b>'+data[name]+'</b></div>').join('');}
 function filteredBarGraph(target,field,categories,predicate){
  const selected=rows.filter(predicate), counts=Object.fromEntries(categories.map(x=>[x,0]));
