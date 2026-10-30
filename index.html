@@ -678,7 +678,29 @@ body.print-epi #epiPrint .rp-signature{padding:18px 0}
 <button class="secondary" id="previewRefresh" type="button">↻ Actualizar cifras</button>
 <button class="primary" id="reportDownload" type="button">⇩ Descargar / imprimir PDF</button>
 </div><div aria-live="polite" class="report-action-status no-print" id="reportActionStatus" role="status"></div><div class="report-inline-help no-print" hidden="" id="reportInlineHelp">Modo edición activado. Haz clic en cualquier texto marcado para modificarlo. Las cifras automáticas no se pueden editar.<div class="report-inline-bar" id="reportInlineBar"><button class="primary" id="saveInlineReport" type="button">Guardar cambios</button><button class="secondary" id="cancelInlineReport" type="button">Cancelar edición</button></div></div>
-<div aria-label="Informe epidemiológico de la jornada" class="report-document" id="reportPreview" role="document"><div class="report-placeholder">Preparando reporte institucional…</div></div>
+<div aria-label="Informe epidemiológico de la jornada" class="report-document" <style>
+/* Documento epidemiológico institucional: independiente del tablero de análisis */
+#reportPreview{max-width:850px;margin:20px auto;background:#fff;box-shadow:0 18px 60px rgba(24,55,38,.12);border:1px solid #e3e9e1;border-radius:7px;overflow:hidden}
+#reportPreview .rp-cover{padding-top:58px;padding-bottom:54px}
+#reportPreview .rp-block{padding:36px 46px;break-inside:avoid-page}
+#reportPreview .rp-section-title{margin-bottom:22px}
+#reportPreview .rp-section-title h2{line-height:1.2}
+#reportPreview .rp-formal-chart{border:1px solid #e3e9e1;border-radius:12px;margin:18px 0;padding:21px 22px;break-inside:avoid}
+#reportPreview .rp-formal-chart h3{font-size:17px;margin:0 0 18px}
+#reportPreview .rp-formal-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:20px 0}
+#reportPreview .rp-formal-mini{background:#f3f7f1;border-radius:10px;padding:15px;text-align:center}
+#reportPreview .rp-formal-mini strong{display:block;font-size:23px;color:#28563a}
+#reportPreview .rp-formal-mini span{font-size:12px;color:#536955}
+#reportPreview .rp-prose{line-height:1.75}
+@media print{
+ @page{size:A4;margin:15mm}
+ body.print-epi #epiPrint .rp-export{max-width:none!important;box-shadow:none!important}
+ body.print-epi .rp-block{break-inside:auto!important;page-break-inside:auto!important}
+ body.print-epi .rp-cover{break-after:page;page-break-after:always}
+ body.print-epi .rp-formal-chart,body.print-epi .rp-chart,body.print-epi .rp-kpis,body.print-epi .rp-two,body.print-epi .rp-photo{break-inside:avoid;page-break-inside:avoid}
+ body.print-epi .rp-formal-mini{break-inside:avoid}
+}
+</style><div id="reportPreview" role="document"><div class="report-placeholder">Preparando reporte institucional…</div></div>
 <div class="report-bottom-note">Los indicadores de participación no permiten estimar prevalencia de tabaquismo ni evaluar diagnósticos. El informe no incluye nombres ni correos de asistentes.</div>
 <div class="report-editor-overlay" hidden="" id="reportEditorOverlay" role="presentation"><div aria-labelledby="editorTitle" aria-modal="true" class="report-editor-modal" role="dialog"><div class="report-editor-top"><div><small>EDICIÓN PRIVADA</small><h2 id="editorTitle">Editor del reporte epidemiológico</h2><p>Edita el documento por apartados y guarda los cambios. El informe se presenta sin casillas ni campos vacíos.</p></div><button class="secondary" id="closeReportEditor" type="button">Cerrar ✕</button></div><div aria-live="polite" class="report-editor-status" id="reportEditorStatus" role="status"></div>
 <section class="panel epi-report" id="epiReportSection">
@@ -1181,6 +1203,26 @@ function demographicHtml(){
  }
  return '<section class="rp-block" id="reportDemographics"><div class="rp-section-title"><span>ANÁLISIS DEMOGRÁFICO Y EXPOSICIÓN TABÁQUICA</span></div><h3>Distribución por edad</h3><p>Con fecha de nacimiento: '+ages.length+'; sin fecha: '+(rows.length-ages.length)+'. Denominador: inscripciones con edad calculable.</p>'+bars+'<h3>Índice tabáquico autodeclarado</h3>'+tobacco+emotionsReport+'<p class="rp-method-note">Paquetes-año = años de consumo × cigarrillos diarios / 20. Los intervalos describen exposición acumulada, no daño pulmonar. Encuesta de participación voluntaria, no representativa de toda la comunidad universitaria. Los datos de salud no se vinculan a folios ni nombres.</p></section>';
 }
+function formalEpiAppendix(){
+ const answers=v4Survey||[];
+ const profiles=['Alumno','Colaborador','Familiar','Alumni','Jubilado','Externo'];
+ const block=(heading,subtitle,contents)=>'<section class="rp-block rp-formal-section"><div class="rp-section-title"><div><small>'+heading+'</small><h2>'+subtitle+'</h2></div></div>'+contents+'</section>';
+ const pChart=(title,arr,total)=>{const mx=Math.max(1,...arr.map(x=>x.n));return '<div class="rp-formal-chart"><h3>'+safe(title)+'</h3>'+arr.map(x=>'<div class="rp-bar-row"><span>'+safe(x.label)+'</span><div class="rp-bar-track"><i style="width:'+(x.n/mx*100)+'%"></i></div><strong>'+x.n+'</strong></div>').join('')+'<p class="rp-method-note">Base: '+total+' respuestas aplicables.</p></div>'};
+ const s0=block('08 · HÁBITOS Y EXPOSICIÓN','Resultados de la encuesta de salud respiratoria',
+ '<p class="rp-prose">Se analizaron <strong>'+answers.length+'</strong> respuestas voluntarias y anónimas. El cuestionario varía según el perfil; los resultados se presentan según la pregunta aplicable y no se interpretan como prevalencia poblacional.</p>'
+ +'<div class="rp-formal-grid">'+profiles.map(profile=>{const group=answers.filter(x=>x.perfil===profile);return '<div class="rp-formal-mini"><strong>'+group.length+'</strong><span>'+profile+'</span></div>'}).join('')+'</div>'
+ +(answers.length?['ever','cigEver','recent','vape','frequency','risk'].map(key=>{const subset=answers.filter(x=>x.respuestas&&x.respuestas[key]!==undefined);if(!subset.length)return '';const titles={ever:'Antecedente autodeclarado de consumo (pregunta variable por perfil)',cigEver:'Antecedente de cigarrillos convencionales',recent:'Consumo en los últimos 30 días (pregunta variable)',vape:'Vapeo en los últimos 30 días',frequency:'Frecuencia de uso en los últimos 30 días',risk:'Percepción del riesgo respiratorio'};return pChart(titles[key],v4Count(subset,key),subset.length)}).join(''):'<p class="rp-prose">Sin respuestas disponibles para este corte.</p>'));
+ const emot=answers.filter(x=>x.respuestas?.emotion),smokers=answers.filter(x=>x.respuestas?.tabaquismo_alguna_vez==='Sí');
+ const pack=smokers.map(x=>x.respuestas?.indice_tabaquico_paquetes_anio).filter(x=>x!==null&&x!==undefined&&Number.isFinite(Number(x))).map(Number);
+ const bands=[['Menos de 5',0,5],['5 a menos de 10',5,10],['10 a menos de 20',10,20],['20 o más',20,Infinity]].map(([label,min,max])=>({label:label+' paquetes-año',n:pack.filter(n=>n>=min&&n<max).length}));
+ const s1=block('09 · EXPOSICIÓN TABÁQUICA','Índice tabáquico y paquetes-año',
+ '<p class="rp-prose">Reportaron antecedentes de cigarrillos <strong>'+smokers.length+'</strong> participantes de la encuesta; en <strong>'+pack.length+'</strong> fue posible calcular paquetes-año.</p>'+pChart('Exposición acumulada autodeclarada',bands,pack.length)
+ +'<p class="rp-method-note">Índice = años fumados × cigarrillos diarios ÷ 20. Es una estimación de exposición acumulada; no representa un diagnóstico ni una escala clínica de daño pulmonar.</p>');
+ const s2=block('10 · BIENESTAR EMOCIONAL','Situaciones relacionadas con el deseo de consumo',
+ '<p class="rp-prose">Respuestas a la pregunta emocional común a todos los perfiles. Se registraron <strong>'+emot.length+'</strong> respuestas aplicables.</p>'+pChart('Situaciones identificadas por los participantes',v4Count(emot,'emotion'),emot.length)
+ +'<p class="rp-method-note">Asociación percibida; no se infiere causalidad ni trastornos psicológicos.</p>');
+ return s0+s1+s2;
+}
 function renderEpiPreview(){
  const preview=$('reportPreview');if(!preview)return;
  const total=rows.length,attended=rows.filter(x=>x.asistencia_confirmada).length,pending=total-attended;
@@ -1221,7 +1263,7 @@ function renderEpiPreview(){
  +'<section class="rp-block"><div class="rp-section-title"><span>05</span><div><small>LECTURA DE RESULTADOS</small><h2>Hallazgos y valoración epidemiológica</h2></div></div>'+narrative(values.hallazgos,noFindings)+ (values.impacto||values.limitaciones?'<div class="rp-outline-note">'+(values.impacto?'<h3>Impacto y alcance</h3>'+narrative(values.impacto,''):'')+(values.limitaciones?'<h3>Limitaciones</h3>'+narrative(values.limitaciones,''):'')+'</div>':'')+'</section>'
  +'<section class="rp-block"><div class="rp-section-title"><span>06</span><div><small>EVIDENCIA DOCUMENTAL</small><h2>Fotografías de la jornada</h2></div></div><div class="rp-photo-grid">'+imageHtml+'</div></section>'
  +'<section class="rp-block"><div class="rp-section-title"><span>07</span><div><small>CONTINUIDAD PREVENTIVA</small><h2>Conclusiones y recomendaciones</h2></div></div><div class="rp-two"><div><h3>Conclusiones</h3>'+narrative(values.conclusiones,noConclusions)+'</div><div><h3>Recomendaciones</h3>'+narrative(values.recomendaciones,noRecommendations)+'</div></div>'+(values.seguimiento?'<div class="rp-outline-note"><h3>Plan de seguimiento</h3>'+narrative(values.seguimiento,'')+'</div>':'')+'</section>'
- +demographicHtml() +'<section class="rp-block rp-analytics-v4"><div class="rp-section-title"><span>DESGLOSE COMPLETO DE RESULTADOS</span></div>'+ (v4Survey? v4HTML():'<p>Actualiza el análisis del panel para integrar las gráficas de las encuestas anónimas.</p>')+'</section>'+'<footer class="rp-signature"><span>Elaborado por: <strong>'+safe(author)+'</strong></span><span>Corte de información: '+safe(when)+'</span><small>Documento institucional. Estadísticas agregadas, sin datos personales.</small></footer>';
+ +demographicHtml()+formalEpiAppendix()+'<footer class="rp-signature"><span>Elaborado por: <strong>'+safe(author)+'</strong></span><span>Corte de información: '+safe(when)+'</span><small>Documento institucional. Estadísticas agregadas, sin datos personales.</small></footer>';
 }
 $('previewRefresh').onclick=renderEpiPreview;
 [...Object.values(EPI_EXTRA), ...Object.values(EPICOLS)].forEach(id=>$(id).addEventListener('input',()=>{if(!$('console-reporte').hidden)renderEpiPreview()}));
