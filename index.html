@@ -735,21 +735,21 @@ const healthQuestions={
  ['recent','En los últimos 30 días, ¿cuántos días utilizaste un vapeador?',['0 días','1–2 días','3–5 días','6–9 días','10–19 días','20–29 días','30 días','Prefiero no responder']],
  ['start','¿A qué edad los utilizaste por primera vez?',['Nunca','Menos de 15 años','15–17 años','18–20 años','21 años o más','Prefiero no responder']],
  ['nic','¿Sabes si el producto utilizado contenía nicotina?',['Sí','No','No sé','No aplica','Prefiero no responder']],
- ['cig','¿Fumaste cigarrillos convencionales en los últimos 30 días?',['Sí','No','Prefiero no responder']]
+ ['emotion','¿Has sentido ganas de fumar o vapear ante alguna de estas emociones o situaciones?',['Estrés o presión académica/laboral','Ansiedad o nerviosismo','Tristeza o soledad','Aburrimiento','Convivencia o presión social','No he relacionado mis emociones con fumar o vapear','Nunca he fumado ni vapeado','Prefiero no responder']]
  ],
  Colaborador:[
  ['ever','¿Alguna vez has fumado cigarrillos convencionales?',['Sí','No','Prefiero no responder']],
  ['recent','En los últimos 30 días, ¿cuántos días fumaste cigarrillos?',['0 días','1–2 días','3–5 días','6–9 días','10–19 días','20–29 días','30 días','Prefiero no responder']],
  ['qty','En los días que fumas, ¿cuántos cigarrillos consumes habitualmente?',['No aplica','Menos de 1','1','2–5','6–10','11–20','Más de 20','Prefiero no responder']],
  ['vape','¿Utilizaste vapeadores en los últimos 30 días?',['Sí','No','Prefiero no responder']],
- ['help','¿Te interesaría recibir información para dejar de fumar?',['Sí','No','Tal vez','No aplica','Prefiero no responder']]
+ ['emotion','¿Has sentido ganas de fumar o vapear ante alguna de estas emociones o situaciones?',['Estrés o presión académica/laboral','Ansiedad o nerviosismo','Tristeza o soledad','Aburrimiento','Convivencia o presión social','No he relacionado mis emociones con fumar o vapear','Nunca he fumado ni vapeado','Prefiero no responder']]
  ],
  General:[
  ['ever','¿Alguna vez has fumado cigarrillos o utilizado vapeadores?',['Sí','No','Prefiero no responder']],
  ['recent','En los últimos 30 días, ¿utilizaste algún producto de tabaco o vapeo?',['No','Cigarrillos','Vapeadores','Ambos','Prefiero no responder']],
  ['frequency','¿Con qué frecuencia lo utilizaste en los últimos 30 días?',['0 días','1–2 días','3–5 días','6–9 días','10–19 días','20–29 días','30 días','Prefiero no responder']],
  ['risk','¿Consideras que fumar o vapear puede afectar la salud respiratoria?',['Sí','No','No sé','Prefiero no responder']],
- ['help','¿Te interesaría información para evitar o dejar el consumo?',['Sí','No','Tal vez','Prefiero no responder']]
+ ['emotion','¿Has sentido ganas de fumar o vapear ante alguna de estas emociones o situaciones?',['Estrés o presión académica/laboral','Ansiedad o nerviosismo','Tristeza o soledad','Aburrimiento','Convivencia o presión social','No he relacionado mis emociones con fumar o vapear','Nunca he fumado ni vapeado','Prefiero no responder']]
  ]};
 function healthGroup(p){return p==='Alumno'?'Alumno':p==='Colaborador'?'Colaborador':'General'}
 function drawHealth(p){
@@ -1091,6 +1091,13 @@ async function refreshTobaccoStats(){
  boxes.forEach(([label,n])=>{const box=document.createElement('div');box.style.cssText='background:#f1f5ec;border:1px solid #dfe6d8;border-radius:12px;padding:15px';const num=document.createElement('strong');num.style.cssText='font-size:25px;display:block';num.textContent=String(n);const caption=document.createElement('small');caption.textContent=label;box.append(num,caption);stats.append(box);});
  if(valid.length){bands.forEach(([title,lo,hi])=>{const count=valid.filter(v=>v>=lo&&v<hi).length;const el=document.createElement('div');el.style.cssText='border-radius:10px;background:#f5f6ef;padding:10px 13px';const pct=Math.round(count/valid.length*100);el.textContent=title+' paquetes-año: '+count+' ('+pct+'% de índices calculables)';groups.append(el);});}
  else groups.textContent='Aún no hay índices tabáquicos calculables.';
+ const emotionLabels=['Estrés o presión académica/laboral','Ansiedad o nerviosismo','Tristeza o soledad','Aburrimiento','Convivencia o presión social','No he relacionado mis emociones con fumar o vapear','Nunca he fumado ni vapeado','Prefiero no responder'];
+ const emotCounts=emotionLabels.map(name=>({name,n:data.filter(x=>x.respuestas?.emotion===name).length}));
+ const emotTotal=emotCounts.reduce((a,x)=>a+x.n,0),emotMax=Math.max(1,...emotCounts.map(x=>x.n));
+ let emotional=$('emotionalStats');if(!emotional){emotional=document.createElement('div');emotional.id='emotionalStats';groups.after(emotional);}
+ emotional.innerHTML='<h3 style="margin-top:25px">Emociones y situaciones asociadas al deseo de fumar o vapear</h3><p class="muted">Respuestas voluntarias de todos los perfiles. Respondieron: '+emotTotal+'; sin dato: '+(data.length-emotTotal)+'. Asociación percibida, sin valor diagnóstico.</p>'+emotCounts.map(x=>'<div class="barrow"><span>'+safe(x.name)+'</span><div class="barbg"><i style="width:'+(x.n/emotMax*100)+'%"></i></div><b>'+x.n+'</b></div>').join('');
+ tobaccoSummary.emotions=emotCounts;
+ if(!$('console-reporte').hidden)renderEpiPreview();
  status.textContent='Resultados actualizados. Las respuestas no contienen nombre, correo ni folio.';
  }catch(e){status.textContent='No se pudieron cargar las estadísticas: '+e.message;}
 }
@@ -1135,7 +1142,12 @@ function demographicHtml(){
  const counts=bands.map(([name,min,max])=>({name,n:vals.filter(v=>v>=min&&v<max).length})),mx=Math.max(1,...counts.map(x=>x.n));
  tobacco='<p><strong>'+tobaccoSummary.total+'</strong> encuestas · <strong>'+tobaccoSummary.yes+'</strong> antecedentes de tabaquismo declarados · <strong>'+vals.length+'</strong> índices calculables.</p>'+counts.map(x=>'<div class="rp-bar-row"><span>'+x.name+' paquetes-año</span><div class="rp-bar-track"><i style="width:'+(x.n/mx*100)+'%"></i></div><strong>'+x.n+'</strong></div>').join('');
  }
- return '<section class="rp-block" id="reportDemographics"><div class="rp-section-title"><span>ANÁLISIS DEMOGRÁFICO Y EXPOSICIÓN TABÁQUICA</span></div><h3>Distribución por edad</h3><p>Con fecha de nacimiento: '+ages.length+'; sin fecha: '+(rows.length-ages.length)+'. Denominador: inscripciones con edad calculable.</p>'+bars+'<h3>Índice tabáquico autodeclarado</h3>'+tobacco+'<p class="rp-method-note">Paquetes-año = años de consumo × cigarrillos diarios / 20. Los intervalos describen exposición acumulada, no daño pulmonar. Encuesta de participación voluntaria, no representativa de toda la comunidad universitaria. Los datos de salud no se vinculan a folios ni nombres.</p></section>';
+ let emotionsReport='';
+ if(tobaccoSummary?.emotions){
+  const ec=tobaccoSummary.emotions,max=Math.max(1,...ec.map(x=>x.n)),sum=ec.reduce((v,x)=>v+x.n,0);
+  emotionsReport='<h3>Emociones y situaciones relacionadas con el deseo de consumo</h3><p>Respuestas obtenidas: '+sum+'. Selección única por participante, sin vinculación a identidad.</p>'+ec.map(x=>'<div class="rp-bar-row"><span>'+safe(x.name)+'</span><div class="rp-bar-track"><i style="width:'+(x.n/max*100)+'%"></i></div><strong>'+x.n+'</strong></div>').join();
+ }
+ return '<section class="rp-block" id="reportDemographics"><div class="rp-section-title"><span>ANÁLISIS DEMOGRÁFICO Y EXPOSICIÓN TABÁQUICA</span></div><h3>Distribución por edad</h3><p>Con fecha de nacimiento: '+ages.length+'; sin fecha: '+(rows.length-ages.length)+'. Denominador: inscripciones con edad calculable.</p>'+bars+'<h3>Índice tabáquico autodeclarado</h3>'+tobacco+emotionsReport+'<p class="rp-method-note">Paquetes-año = años de consumo × cigarrillos diarios / 20. Los intervalos describen exposición acumulada, no daño pulmonar. Encuesta de participación voluntaria, no representativa de toda la comunidad universitaria. Los datos de salud no se vinculan a folios ni nombres.</p></section>';
 }
 function renderEpiPreview(){
  const preview=$('reportPreview');if(!preview)return;
