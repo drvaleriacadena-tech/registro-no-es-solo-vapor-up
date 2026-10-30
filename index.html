@@ -777,7 +777,9 @@ function drawHealth(p){
  
  const eligibility=document.createElement('div');eligibility.id='tobaccoEligibility';eligibility.style.cssText='margin:16px 0;padding:16px;background:#e8eee3;border:1px solid #c9d4c5;border-radius:14px';
  const selector=$('h_tobaccoEver'),question=selector.previousElementSibling;
- eligibility.append(question,selector);root.append(eligibility);
+ eligibility.append(question,selector);
+ // El antecedente ya se pregunta en las 5 preguntas; no se vuelve a mostrar.
+ eligibility.hidden=true;selector.required=false;root.append(eligibility);
  // Para colaboradores, la primera pregunta del cuestionario ya documenta
  // el antecedente de cigarrillos; evitar repetirla y reutilizar su respuesta.
  if(group==='Colaborador'||group==='Alumno'||group==='General'){
@@ -799,6 +801,9 @@ function drawHealth(p){
  const recalc=()=>{const y=Number($('h_tobaccoYears').value),d=Number($('h_tobaccoDaily').value);$('h_tobaccoResult').textContent=y>0&&d>0&&y<=100&&d<=100?'Tu índice tabáquico estimado: '+((y*d)/20).toFixed(2)+' paquetes-año':'Introduce ambos datos para calcular el índice.';};
  $('h_tobaccoYears').addEventListener('input',recalc);$('h_tobaccoDaily').addEventListener('input',recalc);
  $('tobaccoPageSlot').querySelector('#tobaccoNotApplicable').hidden=false;tobacco.hidden=true;
+ const info=document.createElement('div');info.style.cssText='margin:0 0 18px;padding:18px 20px;background:#f8faf6;border:1px solid #d8e3d5;border-left:5px solid #57765b;border-radius:14px';
+ info.innerHTML='<div style="font:700 13px Arial,sans-serif;letter-spacing:2px;color:#607965">PASO 5 DE 5 · EVALUACIÓN OPCIONAL</div><h3 style="font:600 25px Georgia,serif;margin:10px 0;color:#264b37">Tu índice tabáquico</h3><p style="margin:8px 0;line-height:1.55">Utilizaremos la respuesta que ya diste sobre cigarrillos convencionales. No necesitas responderla de nuevo.</p><p style="font-size:13px;margin:8px 0 0">Si has fumado, indica los años de consumo y el promedio diario para estimar tus paquetes-año. Este resultado no diagnostica daño pulmonar.</p>';
+ $('tobaccoPageSlot').prepend(info);
  $('healthConsent').checked=false;
 }
 function getHealthAnswers(p){const out={};for(const [key] of healthQuestions[healthGroup(p)])out[key]=$('h_'+key)?.value||'';
@@ -845,6 +850,8 @@ function initWizard(){
  if(wizardStep===0&&!currentProfile()){alert('Selecciona tu perfil para continuar.');return;}
  if(wizardStep===1&&yearsOld($('fechaNacimiento').value)===null){$('fechaNacimiento').reportValidity();return;}
  for(const field of page.querySelectorAll('[required]')){if(field.closest('[hidden]'))continue;if(!field.checkValidity()){field.reportValidity();return;}}
+ // Refresca la elegibilidad antes de mostrar la pantalla de cálculo.
+ if(wizardStep===3){const first=$(healthGroup(currentProfile())==='Alumno'?'h_cigEver':'h_ever');const hiddenAnswer=$('h_tobaccoEver');if(first&&hiddenAnswer){hiddenAnswer.value=first.value;hiddenAnswer.dispatchEvent(new Event('change'));}}
  const steps=visibleSteps();displayWizard(steps[Math.min(steps.length-1,steps.indexOf(wizardStep)+1)]);
  };
  displayWizard(0);
