@@ -775,29 +775,20 @@ function drawHealth(p){
  $('tobaccoPageSlot').replaceChildren(tobacco);
  if(!$('tobaccoNotApplicable')){const note=document.createElement('p');note.id='tobaccoNotApplicable';note.style.cssText='padding:18px;background:#edf3e9;border-radius:12px';note.textContent='No necesitas calcular el índice tabáquico. Puedes finalizar tu registro.';$('tobaccoPageSlot').prepend(note);}
  
- const eligibility=document.createElement('div');eligibility.id='tobaccoEligibility';eligibility.style.cssText='margin:16px 0;padding:16px;background:#e8eee3;border:1px solid #c9d4c5;border-radius:14px';
- const selector=$('h_tobaccoEver'),question=selector.previousElementSibling;
- eligibility.append(question,selector);
- // El antecedente ya se pregunta en las 5 preguntas; no se vuelve a mostrar.
- eligibility.hidden=true;selector.required=false;root.append(eligibility);
- // Para colaboradores, la primera pregunta del cuestionario ya documenta
- // el antecedente de cigarrillos; evitar repetirla y reutilizar su respuesta.
- if(group==='Colaborador'||group==='Alumno'||group==='General'){
-  eligibility.hidden=true;
-  selector.required=false;
-  const firstAnswer=$(group==='Alumno'?'h_cigEver':'h_ever');
-  const syncTobacco=()=>{
-   selector.value=firstAnswer.value;
-   selector.dispatchEvent(new Event('change',{bubbles:false}));
-  };
-  firstAnswer.addEventListener('change',syncTobacco);
-  firstAnswer.addEventListener('input',syncTobacco);
-  // La sincronización inicial ocurre tras registrar el controlador de cambio.
-  queueMicrotask(syncTobacco);
- }
- $('h_tobaccoEver').addEventListener('change',()=>{
- const yes=$('h_tobaccoEver').value==='Sí';$('tobaccoPageSlot').querySelector('#tobaccoNotApplicable').hidden=yes;tobacco.hidden=!yes;$('h_tobaccoDetails').hidden=!yes;$('h_tobaccoYears').required=yes;$('h_tobaccoDaily').required=yes;if(!yes){$('h_tobaccoYears').value='';$('h_tobaccoDaily').value='';}
- });
+ // No se muestra ningún segundo selector de antecedentes: se usa la respuesta de la encuesta.
+ const source=$((group==='Alumno')?'h_cigEver':'h_ever');
+ const sync=()=>{
+  const yes=source?.value==='Sí';
+  const noNeed=$('tobaccoNotApplicable');
+  if(noNeed)noNeed.hidden=yes;
+  tobacco.hidden=!yes;
+  const details=$('h_tobaccoDetails');if(details)details.hidden=!yes;
+  $('h_tobaccoYears').required=yes;$('h_tobaccoDaily').required=yes;
+  if(!yes){$('h_tobaccoYears').value='';$('h_tobaccoDaily').value='';}
+ };
+ if(source){source.addEventListener('change',sync);source.addEventListener('input',sync);}
+ window.syncVaporTobaccoStep=sync;
+ queueMicrotask(sync);
  const recalc=()=>{const y=Number($('h_tobaccoYears').value),d=Number($('h_tobaccoDaily').value);$('h_tobaccoResult').textContent=y>0&&d>0&&y<=100&&d<=100?'Tu índice tabáquico estimado: '+((y*d)/20).toFixed(2)+' paquetes-año':'Introduce ambos datos para calcular el índice.';};
  $('h_tobaccoYears').addEventListener('input',recalc);$('h_tobaccoDaily').addEventListener('input',recalc);
  $('tobaccoPageSlot').querySelector('#tobaccoNotApplicable').hidden=false;tobacco.hidden=true;
@@ -807,7 +798,7 @@ function drawHealth(p){
  $('healthConsent').checked=false;
 }
 function getHealthAnswers(p){const out={};for(const [key] of healthQuestions[healthGroup(p)])out[key]=$('h_'+key)?.value||'';
- out.tabaquismo_alguna_vez=$('h_tobaccoEver')?.value||'';
+ out.tabaquismo_alguna_vez=$(healthGroup(p)==='Alumno'?'h_cigEver':'h_ever')?.value||'';
  if(out.tabaquismo_alguna_vez==='Sí'){const years=Number($('h_tobaccoYears').value),daily=Number($('h_tobaccoDaily').value);out.anios_fumando=years;out.cigarrillos_dia=daily;out.indice_tabaquico_paquetes_anio=Number((years*daily/20).toFixed(2));}
  return out;}
 function healthAdvice(p,a){
@@ -851,7 +842,7 @@ function initWizard(){
  if(wizardStep===1&&yearsOld($('fechaNacimiento').value)===null){$('fechaNacimiento').reportValidity();return;}
  for(const field of page.querySelectorAll('[required]')){if(field.closest('[hidden]'))continue;if(!field.checkValidity()){field.reportValidity();return;}}
  // Refresca la elegibilidad antes de mostrar la pantalla de cálculo.
- if(wizardStep===3){const first=$(healthGroup(currentProfile())==='Alumno'?'h_cigEver':'h_ever');const hiddenAnswer=$('h_tobaccoEver');if(first&&hiddenAnswer){hiddenAnswer.value=first.value;hiddenAnswer.dispatchEvent(new Event('change'));}}
+ if(wizardStep===3)window.syncVaporTobaccoStep?.();
  const steps=visibleSteps();displayWizard(steps[Math.min(steps.length-1,steps.indexOf(wizardStep)+1)]);
  };
  displayWizard(0);
