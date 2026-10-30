@@ -587,6 +587,11 @@ body{background:radial-gradient(ellipse at 90% -10%,rgba(202,190,164,.14),transp
 .pdf-rectoria .vacc-signature{display:grid!important;grid-template-columns:repeat(2,1fr)!important;gap:18px!important}
 .pdf-rectoria .vacc-signature small,.pdf-rectoria .vacc-signature span,.pdf-rectoria .vacc-signature strong{display:block!important}
 
+
+/* Logotipos nítidos, sin deformación en exportación */
+.pdf-rectoria .rp-logos{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:17px!important}
+.pdf-rectoria .rp-logos img{width:30%!important;height:72px!important;max-height:none!important;object-fit:contain!important;flex:0 0 30%!important}
+#console-evidencias #epiStatus{display:block;min-height:32px;font-size:13px;font-weight:600;color:#285b40;padding-top:8px}
 </style>
 <style id="vapor-pages-and-report-styles">
 /* Separate screens, never a long combined public/admin document. */
@@ -844,7 +849,7 @@ body.print-epi #epiPrint .rp-signature{padding:18px 0}
 </section>
 <section class="console-page" hidden="" id="console-evidencias">
 <div class="module-head"><div><h3>Evidencia fotográfica</h3><p>Sube imágenes del evento con una descripción; se almacenan en una carpeta privada de Supabase.</p></div><span class="module-chip" id="photoCount">0 fotografías</span></div>
-<section class="panel" id="evidenceHolder"><div class="notice-yellow">Usa solo fotografías autorizadas. No incluyas identificaciones, expedientes ni resultados de salud visibles.</div><h3>Evidencia fotográfica</h3><p class="epi-sub">JPG, PNG o WebP · hasta 5 MB por archivo · almacenamiento privado · solo administradores. Evita primeros planos sin autorización.</p><div class="epi-field"><label for="epiUpload">Agregar fotografías del evento</label><input accept="image/jpeg,image/png,image/webp" id="epiUpload" multiple="" type="file"/></div><label class="photo-consent"><input id="photoConsent" type="checkbox"/> Confirmo que tengo autorización institucional para utilizar las fotografías y que no incluyen datos de salud identificables.</label><div class="epi-actions"><button class="secondary" id="epiUploadBtn" type="button">Subir fotografías</button></div><div class="epi-photo-grid" id="epiPhotoGrid"></div><p aria-live="polite" class="epi-report-status" id="epiStatus" role="status"></p></section>
+<section class="panel" id="evidenceHolder"><div class="notice-yellow">Usa solo fotografías autorizadas. No incluyas identificaciones, expedientes ni resultados de salud visibles.</div><h3>Evidencia fotográfica</h3><p class="epi-sub">JPG, PNG o WebP · hasta 5 MB por archivo · almacenamiento privado · solo administradores. Evita primeros planos sin autorización.</p><div class="epi-field"><label for="epiUpload">Agregar fotografías del evento</label><input accept="image/jpeg,image/png,image/webp" id="epiUpload" multiple="" type="file"/></div><label class="photo-consent"><input id="photoConsent" type="checkbox"/> Confirmo que tengo autorización institucional para utilizar las fotografías y que no incluyen datos de salud identificables.</label><div class="epi-actions"><button class="secondary" id="epiUploadBtn" type="button">Guardar fotografías</button><button class="secondary" id="epiReloadPhotos" type="button">↻ Ver fotografías guardadas</button></div><div class="epi-photo-grid" id="epiPhotoGrid"></div><p aria-live="polite" class="epi-report-status" id="epiStatus" role="status"></p></section>
 </section>
 <section class="console-page" hidden="" id="console-reporte">
 <style>
@@ -1214,7 +1219,7 @@ async function epiReadPhoto(path){
  const blob=await response.blob();return new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result);r.onerror=reject;r.readAsDataURL(blob)});
 }
 async function epiDrawPhotos(){
- const place=$('epiPhotoGrid');place.replaceChildren();
+ const place=$('epiPhotoGrid');place.replaceChildren();const countBadge=$('photoCount');if(countBadge)countBadge.textContent=epiPhotos.length+' fotografía'+(epiPhotos.length===1?'':'s');
  for(const p of epiPhotos){
   const figure=document.createElement('figure');figure.className='epi-photo-card';figure.style.margin='0';
   const img=document.createElement('img');img.alt=p.descripcion||'Evidencia fotográfica del evento';img.loading='lazy';
@@ -1232,6 +1237,7 @@ async function epiDrawPhotos(){
 function epiCanvasImage(file){return new Promise((resolve,reject)=>{const url=URL.createObjectURL(file),img=new Image();img.onload=()=>{try{const scale=Math.min(1,1500/img.width,1500/img.height);const canvas=document.createElement('canvas');canvas.width=Math.round(img.width*scale);canvas.height=Math.round(img.height*scale);canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height);canvas.toBlob(b=>{URL.revokeObjectURL(url);b?resolve(b):reject(Error('No se pudo procesar la imagen.'))},'image/jpeg',.82)}catch(e){URL.revokeObjectURL(url);reject(e)}};img.onerror=()=>{URL.revokeObjectURL(url);reject(Error('Imagen inválida.'))};img.src=url})}
 async function epiUpload(){
  if(role!=='admin')return epiMessage('Solo las cuentas administradoras pueden subir fotos.');
+ if(!$('photoConsent').checked)return epiMessage('Marca la casilla de autorización institucional antes de subir fotografías.');
  const files=[...$('epiUpload').files];if(!files.length)return epiMessage('Selecciona al menos una fotografía.');
  let saved=0;
  for(const file of files){
@@ -1267,6 +1273,18 @@ async function epiExport(){
   wrap=document.createElement('div');
   wrap.className='pdf-render-root pdf-rectoria';
   Object.assign(wrap.style,{position:'fixed',left:'-12000px',top:'0',width:'760px',background:'#fff',pointerEvents:'none'});
+  // Convertir logotipos en lienzos de proporción fija para que html2canvas no los deforme.
+  const originalLogos=[...$('reportPreview').querySelectorAll('.rp-logos img')];
+  const exportLogos=[...clone.querySelectorAll('.rp-logos img')];
+  originalLogos.forEach((source,index)=>{
+   const target=exportLogos[index];if(!target||!source.naturalWidth||!source.naturalHeight)return;
+   const surface=document.createElement('canvas');surface.width=500;surface.height=145;
+   const ctx=surface.getContext('2d');const scale=Math.min(470/source.naturalWidth,125/source.naturalHeight);
+   const w=source.naturalWidth*scale,h=source.naturalHeight*scale;
+   ctx.drawImage(source,(500-w)/2,(145-h)/2,w,h);
+   target.src=surface.toDataURL('image/png');
+   target.style.cssText='display:block;width:30%;height:72px;object-fit:contain;max-height:72px';
+  });
   wrap.append(clone);document.body.append(wrap);
   await Promise.all([...clone.querySelectorAll('img')].map(img=>img.complete?Promise.resolve():new Promise(done=>{img.onload=done;img.onerror=done;setTimeout(done,4500)})));
   const pxToMm=contentW/760;
@@ -1308,7 +1326,7 @@ async function epiExport(){
  finally{wrap?.remove();if(btn){btn.disabled=false;btn.textContent='⇩ Descargar PDF';}}
 }
 window.addEventListener('afterprint',()=>{document.body.classList.remove('print-epi');$('epiPrint').replaceChildren()});
-$('epiSave').onclick=epiSave;$('epiReload').onclick=epiLoad;$('epiUploadBtn').onclick=epiUpload;$('epiExport').onclick=epiExport;
+$('epiSave').onclick=epiSave;$('epiReload').onclick=epiLoad;$('epiUploadBtn').onclick=epiUpload;$('epiReloadPhotos').onclick=async()=>{await epiLoad();epiMessage(epiPhotos.length+' fotografías registradas en la galería.');};$('epiExport').onclick=epiExport;
 
 
 
