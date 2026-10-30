@@ -745,7 +745,7 @@ const healthQuestions={
  ['emotion','¿Has sentido ganas de fumar o vapear ante alguna de estas emociones o situaciones?',['Estrés o presión académica/laboral','Ansiedad o nerviosismo','Tristeza o soledad','Aburrimiento','Convivencia o presión social','No he relacionado mis emociones con fumar o vapear','Nunca he fumado ni vapeado','Prefiero no responder']]
  ],
  General:[
- ['ever','¿Alguna vez has fumado cigarrillos o utilizado vapeadores?',['Sí','No','Prefiero no responder']],
+ ['ever','¿Alguna vez has fumado cigarrillos convencionales?',['Sí','No','Prefiero no responder']],
  ['recent','En los últimos 30 días, ¿utilizaste algún producto de tabaco o vapeo?',['No','Cigarrillos','Vapeadores','Ambos','Prefiero no responder']],
  ['frequency','¿Con qué frecuencia lo utilizaste en los últimos 30 días?',['0 días','1–2 días','3–5 días','6–9 días','10–19 días','20–29 días','30 días','Prefiero no responder']],
  ['risk','¿Consideras que fumar o vapear puede afectar la salud respiratoria?',['Sí','No','No sé','Prefiero no responder']],
@@ -772,7 +772,7 @@ function drawHealth(p){
  eligibility.append(question,selector);root.append(eligibility);
  // Para colaboradores, la primera pregunta del cuestionario ya documenta
  // el antecedente de cigarrillos; evitar repetirla y reutilizar su respuesta.
- if(group==='Colaborador'||group==='Alumno'){
+ if(group==='Colaborador'||group==='Alumno'||group==='General'){
   eligibility.hidden=true;
   selector.required=false;
   const firstAnswer=$(group==='Alumno'?'h_cigEver':'h_ever');
