@@ -749,7 +749,7 @@ body.print-epi #epiPrint .rp-signature{padding:18px 0}
 <button class="secondary" id="openReportEditor" type="button">Editar por apartados</button>
 <button class="secondary" id="reportEvidence" type="button">▧ Agregar fotografías</button>
 <button class="secondary" id="previewRefresh" type="button">↻ Actualizar cifras</button>
-<button class="primary" id="reportDownload" type="button">⇩ Descargar / imprimir PDF</button>
+<button class="primary" id="reportDownload" type="button" title="Elige Guardar como PDF en el destino del navegador">⇩ Guardar reporte en PDF</button>
 </div><div aria-live="polite" class="report-action-status no-print" id="reportActionStatus" role="status"></div><div class="report-inline-help no-print" hidden="" id="reportInlineHelp">Modo edición activado. Haz clic en cualquier texto marcado para modificarlo. Las cifras automáticas no se pueden editar.<div class="report-inline-bar" id="reportInlineBar"><button class="primary" id="saveInlineReport" type="button">Guardar cambios</button><button class="secondary" id="cancelInlineReport" type="button">Cancelar edición</button></div></div>
 <div aria-label="Informe epidemiológico de la jornada" class="report-document">
 <div id="reportPreview" role="document"><div class="report-placeholder">Preparando reporte institucional…</div></div>
@@ -1127,17 +1127,19 @@ function epiCanvasImage(file){return new Promise((resolve,reject)=>{const url=UR
 async function epiUpload(){
  if(role!=='admin')return epiMessage('Solo las cuentas administradoras pueden subir fotos.');
  const files=[...$('epiUpload').files];if(!files.length)return epiMessage('Selecciona al menos una fotografía.');
+ let saved=0;
  for(const file of files){
   if(!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size>5*1024*1024){epiMessage('No se cargó '+file.name+': archivo no admitido o supera 5 MB.');continue;}
   try{
    epiMessage('Subiendo '+file.name+'…');const blob=await epiCanvasImage(file),path=(globalThis.crypto.randomUUID?crypto.randomUUID():Date.now()+'-'+Math.random().toString(36).slice(2))+'.jpg';
    const res=await fetch(DB+'/storage/v1/object/'+EPI_BUCKET+'/'+path,{method:'POST',headers:{apikey:KEY,Authorization:'Bearer '+session.access_token,'Content-Type':'image/jpeg','x-upsert':'false'},body:blob});
-   if(!res.ok)throw Error((await res.json().catch(()=>({}))).message||'Error al subir imagen');
+   if(!res.ok){const failure=await res.json().catch(()=>({}));throw Error('Storage HTTP '+res.status+': '+(failure.message||failure.error||failure.error_description||'Permisos o almacenamiento no disponible'));}
    try{await adminFetch('/rest/v1/vapor_reporte_fotos_2026',{method:'POST',headers:{Prefer:'return=minimal'},body:JSON.stringify({storage_path:path,descripcion:file.name.slice(0,220),creado_por:session.user.id})});}
-   catch(err){await fetch(DB+'/storage/v1/object/'+EPI_BUCKET+'/'+path,{method:'DELETE',headers:{apikey:KEY,Authorization:'Bearer '+session.access_token}});throw err;}
-  }catch(err){epiMessage('No se pudo subir '+file.name+': '+err.message);return;}
+   catch(err){await fetch(DB+'/storage/v1/object/'+EPI_BUCKET+'/'+path,{method:'DELETE',headers:{apikey:KEY,Authorization:'Bearer '+session.access_token}});throw Error('Registro de fotografía: '+err.message);}
+   saved++;
+  }catch(err){epiMessage('No se pudo GUARDAR «'+file.name+'»: '+err.message+'. Verifica permisos de Storage y la tabla de fotografías de Supabase.');return;}
  }
- $('epiUpload').value='';await epiLoad();epiMessage('Fotografías guardadas en el espacio privado.');
+ $('epiUpload').value='';await epiLoad();epiMessage(saved+' fotografía(s) guardada(s) en Supabase. Verifica que aparezcan en la galería.');
 }
 function epiCounts(field,values,filter=()=>true){return values.map(v=>[v,rows.filter(r=>filter(r)&&r[field]===v).length]);}
 function epiTable(headers,values){return '<table><thead><tr>'+headers.map(x=>'<th>'+safe(x)+'</th>').join('')+'</tr></thead><tbody>'+values.map(a=>'<tr>'+a.map(x=>'<td>'+safe(x)+'</td>').join('')+'</tr>').join('')+'</tbody></table>'}
@@ -1149,6 +1151,7 @@ async function epiExport(){
  document.body.classList.add('print-epi');
  await Promise.all([...$('epiPrint').querySelectorAll('img')].map(img=>img.complete?Promise.resolve():new Promise(done=>{img.onload=done;img.onerror=done;setTimeout(done,1500)})));
  window.print();
+ epiMessage('Para descargar un archivo: en Destino selecciona «Guardar como PDF» y luego «Guardar». No selecciones la impresora.');
 }
 window.addEventListener('afterprint',()=>{document.body.classList.remove('print-epi');$('epiPrint').replaceChildren()});
 $('epiSave').onclick=epiSave;$('epiReload').onclick=epiLoad;$('epiUploadBtn').onclick=epiUpload;$('epiExport').onclick=epiExport;
