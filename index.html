@@ -481,6 +481,19 @@ body{background:radial-gradient(ellipse at 90% -10%,rgba(202,190,164,.14),transp
 #console-reporte .report-document .report-editor-overlay{position:fixed}
 @media(max-width:800px){#console-reporte #reportPreview .rp-cover,#console-reporte #reportPreview .rp-block{padding:27px 24px}#console-reporte #reportPreview .rp-highlight,#console-reporte #reportPreview .rp-signature{padding:22px 24px}#console-reporte .report-workflow-strip{align-items:flex-start;flex-direction:column}}
 @media print{#console-reporte #reportPreview{border:0;box-shadow:none}#console-reporte #reportPreview .rp-block{break-inside:auto}#console-reporte #reportPreview .rp-cover{break-after:page}}
+
+/* Contraste institucional accesible · resultados */
+#console-reporte #reportPreview .rp-highlight{background:#234b40!important;color:#fff!important;border-bottom:4px solid #c6ab75!important}
+#console-reporte #reportPreview .rp-highlight .rp-label{color:#f0dfb6!important;opacity:1!important}
+#console-reporte #reportPreview .rp-highlight .rp-big,#console-reporte #reportPreview .rp-highlight .rp-big span{color:#fff!important}
+#console-reporte #reportPreview .rp-highlight p{color:#edf4ee!important;opacity:1!important;font-size:14px!important}
+.pdf-render-root .rp-highlight{background:#234b40!important;color:#fff!important;padding:22px 43px 24px!important}
+.pdf-render-root .rp-highlight .rp-label{color:#f0dfb6!important}
+.pdf-render-root .rp-highlight .rp-big,.pdf-render-root .rp-highlight .rp-big span{color:#fff!important}
+.pdf-render-root .rp-highlight p{color:#edf4ee!important}
+.pdf-render-root .rp-cover,.pdf-render-root .rp-block{padding:32px 43px!important}
+.pdf-render-root .rp-cover{padding-top:45px!important;padding-bottom:45px!important}
+.pdf-render-root .rp-signature{padding:22px 43px!important}
 </style>
 <style id="vapor-pages-and-report-styles">
 /* Separate screens, never a long combined public/admin document. */
@@ -749,7 +762,7 @@ body.print-epi #epiPrint .rp-signature{padding:18px 0}
 <button class="secondary" id="openReportEditor" type="button">Editar por apartados</button>
 <button class="secondary" id="reportEvidence" type="button">▧ Agregar fotografías</button>
 <button class="secondary" id="previewRefresh" type="button">↻ Actualizar cifras</button>
-<button class="primary" id="reportDownload" type="button" title="Elige Guardar como PDF en el destino del navegador">⇩ Guardar reporte en PDF</button>
+<button class="primary" id="reportDownload" type="button" title="Elige Guardar como PDF en el destino del navegador">⇩ Descargar PDF</button>
 </div><div aria-live="polite" class="report-action-status no-print" id="reportActionStatus" role="status"></div><div class="report-inline-help no-print" hidden="" id="reportInlineHelp">Modo edición activado. Haz clic en cualquier texto marcado para modificarlo. Las cifras automáticas no se pueden editar.<div class="report-inline-bar" id="reportInlineBar"><button class="primary" id="saveInlineReport" type="button">Guardar cambios</button><button class="secondary" id="cancelInlineReport" type="button">Cancelar edición</button></div></div>
 <div aria-label="Informe epidemiológico de la jornada" class="report-document">
 <div id="reportPreview" role="document"><div class="report-placeholder">Preparando reporte institucional…</div></div>
@@ -1146,12 +1159,47 @@ function epiTable(headers,values){return '<table><thead><tr>'+headers.map(x=>'<t
 function epiSection(title,content){return '<section><h2>'+safe(title)+'</h2><p>'+safe(content||'Sin información capturada.').replace(/\n/g,'<br>')+'</p></section>'}
 async function epiExport(){
  if(!session?.access_token||!role)return epiMessage('Primero inicia sesión con una cuenta autorizada.');
- renderEpiPreview();
- $('epiPrint').innerHTML='<div class="rp-export">'+$('reportPreview').innerHTML+'</div>';
- document.body.classList.add('print-epi');
- await Promise.all([...$('epiPrint').querySelectorAll('img')].map(img=>img.complete?Promise.resolve():new Promise(done=>{img.onload=done;img.onerror=done;setTimeout(done,1500)})));
- window.print();
- epiMessage('Para descargar un archivo: en Destino selecciona «Guardar como PDF» y luego «Guardar». No selecciones la impresora.');
+ const btn=$('reportDownload');if(btn){btn.disabled=true;btn.textContent='Preparando PDF…';}
+ try{
+  renderEpiPreview();
+  if(!window.html2canvas||!window.jspdf?.jsPDF)throw Error('No se cargaron las herramientas de PDF. Revisa la conexión e inténtalo de nuevo.');
+  const source=$('reportPreview');
+  await Promise.all([...source.querySelectorAll('img')].map(img=>img.complete?Promise.resolve():new Promise(done=>{img.onload=done;img.onerror=done;setTimeout(done,4500)})));
+  const {jsPDF}=window.jspdf;const pdf=new jsPDF({orientation:'portrait',unit:'mm',format:'a4',compress:true});
+  const margin=12,pageW=210-2*margin,pageH=297-2*margin;
+  const clone=source.cloneNode(true);
+  clone.removeAttribute('id');clone.querySelectorAll('[id]').forEach(el=>el.removeAttribute('id'));
+  clone.querySelectorAll('.report-edit-marker, .inline-edit-button, button, .no-print').forEach(el=>el.remove());
+  const wrap=document.createElement('div');wrap.className='pdf-render-root';
+  Object.assign(wrap.style,{position:'fixed',left:'-15000px',top:'0',width:'795px',background:'#fff',zIndex:'-1',pointerEvents:'none'});
+  wrap.appendChild(clone);document.body.appendChild(wrap);
+  try{
+   const sections=[...clone.children].filter(el=>el.getBoundingClientRect().height>0);
+   let page=0,y=margin;
+   for(const section of sections){
+    const elementHeight=section.getBoundingClientRect().height;
+    const canvas=await html2canvas(section,{backgroundColor:'#ffffff',scale:1.5,useCORS:true,logging:false,scrollX:0,scrollY:0,windowWidth:1100});
+    const renderHeight=canvas.height*(pageW/canvas.width);
+    const maximumSlice=pageH;
+    let offset=0;
+    while(offset<renderHeight-.01){
+     if(page===0&&y===margin){}else if(y>=margin+pageH-.01){pdf.addPage();page++;y=margin;}
+     const available=margin+pageH-y;const slice=Math.min(available,renderHeight-offset);
+     const sourceY=Math.round(offset/renderHeight*canvas.height);
+     const sourceH=Math.min(canvas.height-sourceY,Math.max(1,Math.round(slice/renderHeight*canvas.height)));
+     const piece=document.createElement('canvas');piece.width=canvas.width;piece.height=sourceH;
+     piece.getContext('2d').drawImage(canvas,0,sourceY,canvas.width,sourceH,0,0,piece.width,piece.height);
+     pdf.addImage(piece.toDataURL('image/jpeg',.88),'JPEG',margin,y,pageW,slice,undefined,'FAST');
+     y+=slice;offset+=slice;
+     if(offset<renderHeight-.01){pdf.addPage();page++;y=margin;}
+    }
+   }
+   if(!sections.length)throw Error('El informe está vacío.');
+   pdf.save('UP_No_es_solo_vapor_Reporte_epidemiologico_2026.pdf');
+   epiMessage('Descarga del PDF iniciada. Revisa la carpeta Descargas de tu navegador.');
+  }finally{wrap.remove();}
+ }catch(err){epiMessage('No fue posible generar el PDF: '+err.message);}
+ finally{if(btn){btn.disabled=false;btn.textContent='⇩ Descargar PDF';}}
 }
 window.addEventListener('afterprint',()=>{document.body.classList.remove('print-epi');$('epiPrint').replaceChildren()});
 $('epiSave').onclick=epiSave;$('epiReload').onclick=epiLoad;$('epiUploadBtn').onclick=epiUpload;$('epiExport').onclick=epiExport;
