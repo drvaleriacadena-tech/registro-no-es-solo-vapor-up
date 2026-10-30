@@ -770,6 +770,21 @@ function drawHealth(p){
  const eligibility=document.createElement('div');eligibility.id='tobaccoEligibility';eligibility.style.cssText='margin:16px 0;padding:16px;background:#e8eee3;border:1px solid #c9d4c5;border-radius:14px';
  const selector=$('h_tobaccoEver'),question=selector.previousElementSibling;
  eligibility.append(question,selector);root.append(eligibility);
+ // Para colaboradores, la primera pregunta del cuestionario ya documenta
+ // el antecedente de cigarrillos; evitar repetirla y reutilizar su respuesta.
+ if(group==='Colaborador'){
+  eligibility.hidden=true;
+  selector.required=false;
+  const firstAnswer=$('h_ever');
+  const syncTobacco=()=>{
+   selector.value=firstAnswer.value;
+   selector.dispatchEvent(new Event('change',{bubbles:false}));
+  };
+  firstAnswer.addEventListener('change',syncTobacco);
+  firstAnswer.addEventListener('input',syncTobacco);
+  // La sincronización inicial ocurre tras registrar el controlador de cambio.
+  queueMicrotask(syncTobacco);
+ }
  $('h_tobaccoEver').addEventListener('change',()=>{
  const yes=$('h_tobaccoEver').value==='Sí';$('tobaccoPageSlot').querySelector('#tobaccoNotApplicable').hidden=yes;tobacco.hidden=!yes;$('h_tobaccoDetails').hidden=!yes;$('h_tobaccoYears').required=yes;$('h_tobaccoDaily').required=yes;if(!yes){$('h_tobaccoYears').value='';$('h_tobaccoDaily').value='';}
  });
