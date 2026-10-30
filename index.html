@@ -494,6 +494,22 @@ body{background:radial-gradient(ellipse at 90% -10%,rgba(202,190,164,.14),transp
 .pdf-render-root .rp-cover,.pdf-render-root .rp-block{padding:32px 43px!important}
 .pdf-render-root .rp-cover{padding-top:45px!important;padding-bottom:45px!important}
 .pdf-render-root .rp-signature{padding:22px 43px!important}
+
+/* Diseño editorial para exportación a Rectoría */
+.pdf-rectoria #reportPreview{width:760px!important;max-width:760px!important;box-shadow:none!important;border:0!important;background:#fff!important}
+.pdf-rectoria .rp-cover{padding:38px 42px 35px!important;border:0!important;background:#fff!important}
+.pdf-rectoria .rp-cover h1{font-size:39px!important}
+.pdf-rectoria .rp-logos img{max-height:66px!important;object-fit:contain!important}
+.pdf-rectoria .rp-block{padding:20px 38px 25px!important;border:0!important;background:#fff!important}
+.pdf-rectoria .rp-highlight{padding:24px 38px!important;background:#234b40!important;color:#fff!important}
+.pdf-rectoria .rp-highlight *{color:#fff!important}
+.pdf-rectoria .rp-highlight .rp-label{color:#f2dba8!important}
+.pdf-rectoria .rp-highlight p{color:#eaf2ec!important}
+.pdf-rectoria .rp-section-title h2{font-size:22px!important}
+.pdf-rectoria .rp-prose,.pdf-rectoria .rp-block p{font-size:13px!important;line-height:1.65!important}
+.pdf-rectoria .rp-bar-row{font-size:12px!important;min-height:25px!important}
+.pdf-rectoria .rp-bar-track{height:9px!important}
+.pdf-rectoria .rp-signature{padding:25px 38px!important;background:#fff!important}
 </style>
 <style id="vapor-pages-and-report-styles">
 /* Separate screens, never a long combined public/admin document. */
@@ -1159,47 +1175,62 @@ function epiTable(headers,values){return '<table><thead><tr>'+headers.map(x=>'<t
 function epiSection(title,content){return '<section><h2>'+safe(title)+'</h2><p>'+safe(content||'Sin información capturada.').replace(/\n/g,'<br>')+'</p></section>'}
 async function epiExport(){
  if(!session?.access_token||!role)return epiMessage('Primero inicia sesión con una cuenta autorizada.');
- const btn=$('reportDownload');if(btn){btn.disabled=true;btn.textContent='Preparando PDF…';}
+ const btn=$('reportDownload');if(btn){btn.disabled=true;btn.textContent='Preparando informe…';}
+ let wrap=null;
  try{
   renderEpiPreview();
-  if(!window.html2canvas||!window.jspdf?.jsPDF)throw Error('No se cargaron las herramientas de PDF. Revisa la conexión e inténtalo de nuevo.');
-  const source=$('reportPreview');
-  await Promise.all([...source.querySelectorAll('img')].map(img=>img.complete?Promise.resolve():new Promise(done=>{img.onload=done;img.onerror=done;setTimeout(done,4500)})));
-  const {jsPDF}=window.jspdf;const pdf=new jsPDF({orientation:'portrait',unit:'mm',format:'a4',compress:true});
-  const margin=12,pageW=210-2*margin,pageH=297-2*margin;
-  const clone=source.cloneNode(true);
-  clone.removeAttribute('id');clone.querySelectorAll('[id]').forEach(el=>el.removeAttribute('id'));
-  clone.querySelectorAll('.report-edit-marker, .inline-edit-button, button, .no-print').forEach(el=>el.remove());
-  const wrap=document.createElement('div');wrap.className='pdf-render-root';
-  Object.assign(wrap.style,{position:'fixed',left:'-15000px',top:'0',width:'795px',background:'#fff',zIndex:'-1',pointerEvents:'none'});
-  wrap.appendChild(clone);document.body.appendChild(wrap);
-  try{
-   const sections=[...clone.children].filter(el=>el.getBoundingClientRect().height>0);
-   let page=0,y=margin;
-   for(const section of sections){
-    const elementHeight=section.getBoundingClientRect().height;
-    const canvas=await html2canvas(section,{backgroundColor:'#ffffff',scale:1.5,useCORS:true,logging:false,scrollX:0,scrollY:0,windowWidth:1100});
-    const renderHeight=canvas.height*(pageW/canvas.width);
-    const maximumSlice=pageH;
-    let offset=0;
-    while(offset<renderHeight-.01){
-     if(page===0&&y===margin){}else if(y>=margin+pageH-.01){pdf.addPage();page++;y=margin;}
-     const available=margin+pageH-y;const slice=Math.min(available,renderHeight-offset);
-     const sourceY=Math.round(offset/renderHeight*canvas.height);
-     const sourceH=Math.min(canvas.height-sourceY,Math.max(1,Math.round(slice/renderHeight*canvas.height)));
-     const piece=document.createElement('canvas');piece.width=canvas.width;piece.height=sourceH;
-     piece.getContext('2d').drawImage(canvas,0,sourceY,canvas.width,sourceH,0,0,piece.width,piece.height);
-     pdf.addImage(piece.toDataURL('image/jpeg',.88),'JPEG',margin,y,pageW,slice,undefined,'FAST');
-     y+=slice;offset+=slice;
-     if(offset<renderHeight-.01){pdf.addPage();page++;y=margin;}
+  if(!window.html2canvas||!window.jspdf?.jsPDF)throw Error('No se cargó el generador de PDF.');
+  const {jsPDF}=window.jspdf;
+  const pdf=new jsPDF({orientation:'portrait',unit:'mm',format:'a4',compress:true});
+  const pw=210,ph=297,mx=18,my=20,contentW=pw-2*mx,bottom=ph-20;
+  const clone=$('reportPreview').cloneNode(true);
+  clone.removeAttribute('id');
+  clone.querySelectorAll('[id]').forEach(el=>el.removeAttribute('id'));
+  clone.querySelectorAll('button,.report-edit-marker,.inline-edit-button,.no-print').forEach(el=>el.remove());
+  wrap=document.createElement('div');
+  wrap.className='pdf-render-root pdf-rectoria';
+  Object.assign(wrap.style,{position:'fixed',left:'-12000px',top:'0',width:'760px',background:'#fff',pointerEvents:'none'});
+  wrap.append(clone);document.body.append(wrap);
+  await Promise.all([...clone.querySelectorAll('img')].map(img=>img.complete?Promise.resolve():new Promise(done=>{img.onload=done;img.onerror=done;setTimeout(done,4500)})));
+  const pxToMm=contentW/760;
+  let page=1,y=my;
+  function pageHeader(){if(page>1){pdf.setDrawColor(221,227,218);pdf.line(mx,12,pw-mx,12);pdf.setFont('helvetica','normal');pdf.setFontSize(8);pdf.setTextColor(80,103,85);pdf.text('UNIVERSIDAD PANAMERICANA  /  SALUD Y BIENESTAR',mx,9);}}
+  function pageFooter(){pdf.setDrawColor(220,225,219);pdf.line(mx,ph-14,pw-mx,ph-14);pdf.setFont('helvetica','normal');pdf.setFontSize(8);pdf.setTextColor(99,111,102);pdf.text('NO ES SOLO VAPOR  ·  INFORME EPIDEMIOLÓGICO',mx,ph-9);pdf.text(String(page),pw-mx,ph-9,{align:'right'});}
+  function nextPage(){pageFooter();pdf.addPage();page++;y=my;pageHeader();}
+  async function drawSection(section,cover=false){
+    const canvas=await html2canvas(section,{backgroundColor:'#ffffff',scale:1.7,useCORS:true,logging:false,scrollX:0,scrollY:0,windowWidth:950});
+    const height=canvas.height/canvas.width*contentW;
+    if(cover){
+      const coverH=Math.min(height,194);
+      pdf.addImage(canvas.toDataURL('image/jpeg',.93),'JPEG',mx,26,contentW,coverH);
+      pdf.setDrawColor(185,155,98);pdf.setLineWidth(.7);pdf.line(mx,237,pw-mx,237);
+      pdf.setFont('helvetica','normal');pdf.setTextColor(64,80,70);pdf.setFontSize(10);
+      pdf.text('DOCUMENTO DE USO INSTITUCIONAL',mx,247);
+      pdf.setFontSize(9);pdf.text('Medicina de Campus  ·  Universidad Panamericana',mx,254);
+      nextPage();return;
     }
-   }
-   if(!sections.length)throw Error('El informe está vacío.');
-   pdf.save('UP_No_es_solo_vapor_Reporte_epidemiologico_2026.pdf');
-   epiMessage('Descarga del PDF iniciada. Revisa la carpeta Descargas de tu navegador.');
-  }finally{wrap.remove();}
- }catch(err){epiMessage('No fue posible generar el PDF: '+err.message);}
- finally{if(btn){btn.disabled=false;btn.textContent='⇩ Descargar PDF';}}
+    if(height <= bottom-my && y+height>bottom)nextPage();
+    let consumed=0;
+    while(consumed<height-.02){
+      const remain=bottom-y,chunk=Math.min(remain,height-consumed);
+      const sourceY=Math.round(consumed/height*canvas.height);
+      const sourceEnd=Math.min(canvas.height,Math.round((consumed+chunk)/height*canvas.height));
+      const slice=document.createElement('canvas');slice.width=canvas.width;slice.height=Math.max(1,sourceEnd-sourceY);
+      slice.getContext('2d').drawImage(canvas,0,sourceY,canvas.width,slice.height,0,0,canvas.width,slice.height);
+      pdf.addImage(slice.toDataURL('image/jpeg',.92),'JPEG',mx,y,contentW,chunk,undefined,'FAST');
+      y+=chunk;consumed+=chunk;
+      if(consumed<height-.02)nextPage();
+    }
+    y+=3.5;
+  }
+  const sections=[...clone.children].filter(el=>el.getBoundingClientRect().height>0);
+  if(!sections.length)throw Error('El informe no contiene secciones.');
+  for(let i=0;i<sections.length;i++)await drawSection(sections[i],i===0);
+  pageFooter();
+  pdf.save('UP_Informe_Epidemiologico_No_es_solo_Vapor_2026.pdf');
+  epiMessage('PDF institucional generado. Revisa el archivo descargado antes de su entrega.');
+ }catch(err){epiMessage('Error al generar PDF: '+err.message);}
+ finally{wrap?.remove();if(btn){btn.disabled=false;btn.textContent='⇩ Descargar PDF';}}
 }
 window.addEventListener('afterprint',()=>{document.body.classList.remove('print-epi');$('epiPrint').replaceChildren()});
 $('epiSave').onclick=epiSave;$('epiReload').onclick=epiLoad;$('epiUploadBtn').onclick=epiUpload;$('epiExport').onclick=epiExport;
@@ -1311,17 +1342,17 @@ function formalEpiAppendix(){
  const profiles=['Alumno','Colaborador','Familiar','Alumni','Jubilado','Externo'];
  const block=(heading,subtitle,contents)=>'<section class="rp-block rp-formal-section"><div class="rp-section-title"><div><small>'+heading+'</small><h2>'+subtitle+'</h2></div></div>'+contents+'</section>';
  const pChart=(title,arr,total)=>{const mx=Math.max(1,...arr.map(x=>x.n));return '<div class="rp-formal-chart"><h3>'+safe(title)+'</h3>'+arr.map(x=>'<div class="rp-bar-row"><span>'+safe(x.label)+'</span><div class="rp-bar-track"><i style="width:'+(x.n/mx*100)+'%"></i></div><strong>'+x.n+'</strong></div>').join('')+'<p class="rp-method-note">Base: '+total+' respuestas aplicables.</p></div>'};
- const s0=block('08 · HÁBITOS Y EXPOSICIÓN','Resultados de la encuesta de salud respiratoria',
+ const s0=block('05 · HÁBITOS Y EXPOSICIÓN','Resultados de la encuesta de salud respiratoria',
  '<p class="rp-prose">Se analizaron <strong>'+answers.length+'</strong> respuestas voluntarias y anónimas. El cuestionario varía según el perfil; los resultados se presentan según la pregunta aplicable y no se interpretan como prevalencia poblacional.</p>'
  +'<div class="rp-formal-grid">'+profiles.map(profile=>{const group=answers.filter(x=>x.perfil===profile);return '<div class="rp-formal-mini"><strong>'+group.length+'</strong><span>'+profile+'</span></div>'}).join('')+'</div>'
  +(answers.length?['ever','cigEver','recent','vape','frequency','risk'].map(key=>{const subset=answers.filter(x=>x.respuestas&&x.respuestas[key]!==undefined);if(!subset.length)return '';const titles={ever:'Antecedente autodeclarado de consumo (pregunta variable por perfil)',cigEver:'Antecedente de cigarrillos convencionales',recent:'Consumo en los últimos 30 días (pregunta variable)',vape:'Vapeo en los últimos 30 días',frequency:'Frecuencia de uso en los últimos 30 días',risk:'Percepción del riesgo respiratorio'};return pChart(titles[key],v4Count(subset,key),subset.length)}).join(''):'<p class="rp-prose">Sin respuestas disponibles para este corte.</p>'));
  const emot=answers.filter(x=>x.respuestas?.emotion),smokers=answers.filter(x=>x.respuestas?.tabaquismo_alguna_vez==='Sí');
  const pack=smokers.map(x=>x.respuestas?.indice_tabaquico_paquetes_anio).filter(x=>x!==null&&x!==undefined&&Number.isFinite(Number(x))).map(Number);
  const bands=[['Menos de 5',0,5],['5 a menos de 10',5,10],['10 a menos de 20',10,20],['20 o más',20,Infinity]].map(([label,min,max])=>({label:label+' paquetes-año',n:pack.filter(n=>n>=min&&n<max).length}));
- const s1=block('09 · EXPOSICIÓN TABÁQUICA','Índice tabáquico y paquetes-año',
+ const s1=block('06 · EXPOSICIÓN TABÁQUICA','Índice tabáquico y paquetes-año',
  '<p class="rp-prose">Reportaron antecedentes de cigarrillos <strong>'+smokers.length+'</strong> participantes de la encuesta; en <strong>'+pack.length+'</strong> fue posible calcular paquetes-año.</p>'+pChart('Exposición acumulada autodeclarada',bands,pack.length)
  +'<p class="rp-method-note">Índice = años fumados × cigarrillos diarios ÷ 20. Es una estimación de exposición acumulada; no representa un diagnóstico ni una escala clínica de daño pulmonar.</p>');
- const s2=block('10 · BIENESTAR EMOCIONAL','Situaciones relacionadas con el deseo de consumo',
+ const s2=block('07 · BIENESTAR EMOCIONAL','Situaciones relacionadas con el deseo de consumo',
  '<p class="rp-prose">Respuestas a la pregunta emocional común a todos los perfiles. Se registraron <strong>'+emot.length+'</strong> respuestas aplicables.</p>'+pChart('Situaciones identificadas por los participantes',v4Count(emot,'emotion'),emot.length)
  +'<p class="rp-method-note">Asociación percibida; no se infiere causalidad ni trastornos psicológicos.</p>');
  return s0+s1+s2;
@@ -1364,10 +1395,10 @@ function renderEpiPreview(){
  +'<section class="rp-block"><div class="rp-section-title"><span>03</span><div><small>METODOLOGÍA</small><h2>Objetivo y fuentes de información</h2></div></div><div class="rp-two"><div><h3>Objetivo</h3>'+narrative(values.objetivo,defaultObjective)+'</div><div><h3>Metodología</h3>'+narrative(values.metodologia,defaultMethod)+'</div></div><p class="rp-method-note"><strong>Interpretación:</strong> los resultados describen registros y asistentes de una actividad de promoción de la salud. No estiman prevalencia de tabaquismo o vapeo ni establecen diagnósticos respiratorios.</p></section>'
  +'<section class="rp-block"><div class="rp-section-title"><span>04</span><div><small>INTERVENCIÓN EDUCATIVA</small><h2>Actividades de la campaña</h2></div></div>'+narrative(values.actividades,defaultActivities)+'</section>'
  +formalEpiAppendix()
- +'<section class="rp-block"><div class="rp-section-title"><span>05</span><div><small>LECTURA DE RESULTADOS</small><h2>Hallazgos y valoración epidemiológica</h2></div></div>'+narrative(values.hallazgos,noFindings)+ (values.impacto||values.limitaciones?'<div class="rp-outline-note">'+(values.impacto?'<h3>Impacto y alcance</h3>'+narrative(values.impacto,''):'')+(values.limitaciones?'<h3>Limitaciones</h3>'+narrative(values.limitaciones,''):'')+'</div>':'')+'</section>'
- +'<section class="rp-block"><div class="rp-section-title"><span>06</span><div><small>EVIDENCIA DOCUMENTAL</small><h2>Fotografías de la jornada</h2></div></div><div class="rp-photo-grid">'+imageHtml+'</div></section>'
- +'<section class="rp-block"><div class="rp-section-title"><div><small>MEJORA CONTINUA · 2027</small><h2>Indicadores y acciones de seguimiento</h2></div></div><p class="rp-prose">Este informe describe a los participantes voluntarios. No permite estimar prevalencia de tabaquismo en toda la comunidad universitaria. Para 2027 se recomienda mantener indicadores comparables de asistencia, cobertura de encuesta, perfiles, grupos de edad, exposición a cigarrillos, índice tabáquico y emociones asociadas al consumo, además de registrar los cambios en el instrumento de encuesta.</p><p class="rp-method-note">Para estimar la prevalencia universitaria se requiere una encuesta representativa con población y denominador definidos, separada del registro de la campaña.</p></section>'
- +'<section class="rp-block"><div class="rp-section-title"><span>07</span><div><small>CONTINUIDAD PREVENTIVA</small><h2>Conclusiones y recomendaciones</h2></div></div><div class="rp-two"><div><h3>Conclusiones</h3>'+narrative(values.conclusiones,noConclusions)+'</div><div><h3>Recomendaciones</h3>'+narrative(values.recomendaciones,noRecommendations)+'</div></div>'+(values.seguimiento?'<div class="rp-outline-note"><h3>Plan de seguimiento</h3>'+narrative(values.seguimiento,'')+'</div>':'')+'</section>'
+ +'<section class="rp-block"><div class="rp-section-title"><span>08</span><div><small>LECTURA DE RESULTADOS</small><h2>Hallazgos y valoración epidemiológica</h2></div></div>'+narrative(values.hallazgos,noFindings)+ (values.impacto||values.limitaciones?'<div class="rp-outline-note">'+(values.impacto?'<h3>Impacto y alcance</h3>'+narrative(values.impacto,''):'')+(values.limitaciones?'<h3>Limitaciones</h3>'+narrative(values.limitaciones,''):'')+'</div>':'')+'</section>'
+ +'<section class="rp-block"><div class="rp-section-title"><span>09</span><div><small>EVIDENCIA DOCUMENTAL</small><h2>Fotografías de la jornada</h2></div></div><div class="rp-photo-grid">'+imageHtml+'</div></section>'
+ +'<section class="rp-block"><div class="rp-section-title"><div><small>10 · MEJORA CONTINUA · 2027</small><h2>Indicadores y acciones de seguimiento</h2></div></div><p class="rp-prose">Este informe describe a los participantes voluntarios. No permite estimar prevalencia de tabaquismo en toda la comunidad universitaria. Para 2027 se recomienda mantener indicadores comparables de asistencia, cobertura de encuesta, perfiles, grupos de edad, exposición a cigarrillos, índice tabáquico y emociones asociadas al consumo, además de registrar los cambios en el instrumento de encuesta.</p><p class="rp-method-note">Para estimar la prevalencia universitaria se requiere una encuesta representativa con población y denominador definidos, separada del registro de la campaña.</p></section>'
+ +'<section class="rp-block"><div class="rp-section-title"><span>11</span><div><small>CONTINUIDAD PREVENTIVA</small><h2>Conclusiones y recomendaciones</h2></div></div><div class="rp-two"><div><h3>Conclusiones</h3>'+narrative(values.conclusiones,noConclusions)+'</div><div><h3>Recomendaciones</h3>'+narrative(values.recomendaciones,noRecommendations)+'</div></div>'+(values.seguimiento?'<div class="rp-outline-note"><h3>Plan de seguimiento</h3>'+narrative(values.seguimiento,'')+'</div>':'')+'</section>'
  +'<footer class="rp-signature"><span>Elaborado por: <strong>'+safe(author)+'</strong></span><span>Corte de información: '+safe(when)+'</span><small>Documento institucional. Estadísticas agregadas, sin datos personales.</small></footer>';
 }
 $('previewRefresh').onclick=renderEpiPreview;
