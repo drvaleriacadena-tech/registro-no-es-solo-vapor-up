@@ -780,9 +780,10 @@ function drawHealth(p){
  const sync=()=>{
   const yes=source?.value==='Sí';
   const noNeed=$('tobaccoNotApplicable');
-  if(noNeed)noNeed.hidden=yes;
+  if(noNeed){noNeed.hidden=yes;noNeed.style.display=yes?'none':'block';}
   tobacco.hidden=!yes;
-  const details=$('h_tobaccoDetails');if(details)details.hidden=!yes;
+  tobacco.style.display=yes?'block':'none';
+  const details=$('h_tobaccoDetails');if(details){details.hidden=!yes;details.style.display=yes?'block':'none';}
   $('h_tobaccoYears').required=yes;$('h_tobaccoDaily').required=yes;
   if(!yes){$('h_tobaccoYears').value='';$('h_tobaccoDaily').value='';}
  };
@@ -791,7 +792,7 @@ function drawHealth(p){
  queueMicrotask(sync);
  const recalc=()=>{const y=Number($('h_tobaccoYears').value),d=Number($('h_tobaccoDaily').value);$('h_tobaccoResult').textContent=y>0&&d>0&&y<=100&&d<=100?'Tu índice tabáquico estimado: '+((y*d)/20).toFixed(2)+' paquetes-año':'Introduce ambos datos para calcular el índice.';};
  $('h_tobaccoYears').addEventListener('input',recalc);$('h_tobaccoDaily').addEventListener('input',recalc);
- $('tobaccoPageSlot').querySelector('#tobaccoNotApplicable').hidden=false;tobacco.hidden=true;
+ $('tobaccoPageSlot').querySelector('#tobaccoNotApplicable').hidden=false;tobacco.hidden=true;tobacco.style.display='none';
  const info=document.createElement('div');info.style.cssText='margin:0 0 18px;padding:18px 20px;background:#f8faf6;border:1px solid #d8e3d5;border-left:5px solid #57765b;border-radius:14px';
  info.innerHTML='<div style="font:700 13px Arial,sans-serif;letter-spacing:2px;color:#607965">PASO 5 DE 5 · EVALUACIÓN OPCIONAL</div><h3 style="font:600 25px Georgia,serif;margin:10px 0;color:#264b37">Tu índice tabáquico</h3><p style="margin:8px 0;line-height:1.55">Utilizaremos la respuesta que ya diste sobre cigarrillos convencionales. No necesitas responderla de nuevo.</p><p style="font-size:13px;margin:8px 0 0">Si has fumado, indica los años de consumo y el promedio diario para estimar tus paquetes-año. Este resultado no diagnostica daño pulmonar.</p>';
  $('tobaccoPageSlot').prepend(info);
