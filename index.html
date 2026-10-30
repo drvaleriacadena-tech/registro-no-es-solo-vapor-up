@@ -458,6 +458,29 @@ body{background:radial-gradient(ellipse at 90% -10%,rgba(202,190,164,.14),transp
 
 /* Documento final separado del tablero estadístico */
 .epi-final-guide{background:#f3f7f2;border:1px solid #dce8dd;border-left:4px solid #597d62;border-radius:12px;padding:18px 22px;margin:0 0 24px;color:#304d3a;font-size:13px;line-height:1.65}.epi-final-guide strong{letter-spacing:.05em}.epi-final-guide p{margin:8px 0}.report-analysis-intro{margin:26px 0 14px}.report-analysis-intro h3{font:500 24px Georgia,serif;margin:0 0 5px}.report-analysis-intro p{font-size:13px;color:#68776b}.analytics-v4{margin:16px 0 24px}.report-document{display:block}
+
+/* RECTORÍA 2026: único documento editorial continuo, sin hojas apiladas */
+#console-reporte{background:#f8f9f6}
+#console-reporte .report-workflow-strip{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:14px 20px;border:1px solid #dfe5da;border-radius:12px;background:#f6f8f3;margin:0 0 14px}
+#console-reporte .report-workflow-strip>div{display:flex;flex-direction:column;gap:3px}
+#console-reporte .report-workflow-strip strong{font-size:11px;letter-spacing:.14em;color:#365b43}
+#console-reporte .report-workflow-strip span{font-size:12px;color:#68776a}
+#console-reporte .report-workflow-chip{background:#e5ecdf;color:#315743!important;border-radius:30px;padding:7px 12px;white-space:nowrap;font-weight:700}
+#console-reporte .report-page-actions{display:flex;justify-content:flex-end;align-items:center;gap:10px;margin:0 0 17px}
+#console-reporte .report-page-actions button{min-height:43px;padding:10px 14px}
+#console-reporte .report-document{width:100%;max-width:1100px;margin:0 auto;background:#fff;border:1px solid #e5e8e1;border-radius:12px;box-shadow:0 10px 32px rgba(32,53,38,.07);overflow:visible;padding:0}
+#console-reporte #reportPreview{width:100%;max-width:none;margin:0;background:transparent;border:0;box-shadow:none;border-radius:0;overflow:visible;font-family:Inter,Arial,sans-serif}
+#console-reporte #reportPreview .rp-cover{margin:0;padding:54px 62px 42px;background:#fff;border:0;border-bottom:1px solid #e5e7df;box-shadow:none;border-radius:0}
+#console-reporte #reportPreview .rp-highlight{margin:0;padding:25px 62px;background:#f3f7f1;border-radius:0;border-top:0;border-bottom:1px solid #e6ece4;box-shadow:none}
+#console-reporte #reportPreview .rp-block{margin:0;padding:38px 62px;background:#fff;border:0;border-bottom:1px solid #e9ece7;border-radius:0;box-shadow:none;max-width:none}
+#console-reporte #reportPreview .rp-block:last-of-type{border-bottom:0}
+#console-reporte #reportPreview .rp-section-title{margin:0 0 22px}
+#console-reporte #reportPreview .rp-chart,#console-reporte #reportPreview .rp-formal-chart{background:#fff;border:1px solid #e4eae3;border-radius:10px;box-shadow:none}
+#console-reporte #reportPreview .rp-kpis>div{box-shadow:none}
+#console-reporte #reportPreview .rp-signature{margin:0;padding:29px 62px 45px;background:#f8faf7;border-top:1px solid #e6ebe5}
+#console-reporte .report-document .report-editor-overlay{position:fixed}
+@media(max-width:800px){#console-reporte #reportPreview .rp-cover,#console-reporte #reportPreview .rp-block{padding:27px 24px}#console-reporte #reportPreview .rp-highlight,#console-reporte #reportPreview .rp-signature{padding:22px 24px}#console-reporte .report-workflow-strip{align-items:flex-start;flex-direction:column}}
+@media print{#console-reporte #reportPreview{border:0;box-shadow:none}#console-reporte #reportPreview .rp-block{break-inside:auto}#console-reporte #reportPreview .rp-cover{break-after:page}}
 </style>
 <style id="vapor-pages-and-report-styles">
 /* Separate screens, never a long combined public/admin document. */
@@ -721,8 +744,7 @@ body.print-epi #epiPrint .rp-signature{padding:18px 0}
 <style>
 .analytics-v4{background:#f6f8f5;border:1px solid #dce5dc;border-radius:18px;padding:18px;margin:18px 0;color:#244234}.analytics-v4 h3{font:700 25px Georgia,serif;margin:4px 0 8px}.analytics-v4 .v4-filters{display:flex;flex-wrap:wrap;gap:12px;align-items:end;margin:15px 0}.analytics-v4 .v4-filters label{display:grid;gap:5px;flex:1;min-width:155px;font-size:12px;font-weight:bold}.analytics-v4 select{padding:10px;background:white;border:1px solid #c4d1c5;border-radius:9px;width:100%}.analytics-v4 .v4-kpi{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:10px;margin:12px 0}.analytics-v4 .v4-kpi>div{background:white;padding:13px;border-radius:12px;border:1px solid #dfe6dc}.analytics-v4 .v4-kpi strong{display:block;font-size:26px}.analytics-v4 .v4-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}.analytics-v4 .v4-chart{background:white;border:1px solid #dce5dc;padding:15px;border-radius:13px}.analytics-v4 .v4-chart h4{font-size:15px;margin:0 0 13px}.analytics-v4 .v4-bar{display:grid;grid-template-columns:minmax(105px,1.15fr) minmax(55px,2fr) 38px;align-items:center;gap:8px;margin:9px 0;font-size:12px}.analytics-v4 .v4-track{height:12px;background:#e9efe9;border-radius:15px;overflow:hidden}.analytics-v4 .v4-track i{display:block;background:#588970;height:100%;border-radius:15px}.analytics-v4 .v4-bar b{text-align:right}.analytics-v4 .v4-note{font-size:12px;color:#586a5b;line-height:1.5}.rp-analytics-v4 .v4-grid{grid-template-columns:repeat(2,minmax(0,1fr))}@media(max-width:650px){.rp-analytics-v4 .v4-grid{grid-template-columns:1fr}}
 </style>
-<div class="epi-final-guide"><strong>INFORME EPIDEMIOLÓGICO INTEGRAL</strong><p>Informe institucional único: participación, cobertura de encuestas, análisis de las preguntas de salud respiratoria, exposición al tabaco, interpretación médica, limitaciones y recomendaciones para 2027. Los apartados narrativos pueden editarse desde «Editar informe».</p><p><strong>Nota metodológica:</strong> la muestra es voluntaria y no representativa de toda la universidad; los porcentajes de consumo no deben presentarse como prevalencia institucional ni como diagnósticos.</p></div><div class="module-head report-top-head"><div><div class="tinytitle">DOCUMENTO INSTITUCIONAL · SALUD PÚBLICA</div><h3>Reporte epidemiológico de la jornada</h3><p>Informe descriptivo de alcance y participación. Actualizado con los registros del sistema.</p></div><span class="module-chip">Documento, no formulario</span></div>
-
+<div class="report-workflow-strip no-print"><div><strong>INFORME INSTITUCIONAL</strong><span>Documento final para Rectoría · Datos de participación y salud respiratoria</span></div><span class="report-workflow-chip">Versión editable</span></div>
 <div class="report-page-actions no-print"><button class="primary" id="enableInlineEdit" type="button">✎ Editar informe completo</button>
 <button class="secondary" id="openReportEditor" type="button">Editar por apartados</button>
 <button class="secondary" id="reportEvidence" type="button">▧ Agregar fotografías</button>
@@ -731,7 +753,7 @@ body.print-epi #epiPrint .rp-signature{padding:18px 0}
 </div><div aria-live="polite" class="report-action-status no-print" id="reportActionStatus" role="status"></div><div class="report-inline-help no-print" hidden="" id="reportInlineHelp">Modo edición activado. Haz clic en cualquier texto marcado para modificarlo. Las cifras automáticas no se pueden editar.<div class="report-inline-bar" id="reportInlineBar"><button class="primary" id="saveInlineReport" type="button">Guardar cambios</button><button class="secondary" id="cancelInlineReport" type="button">Cancelar edición</button></div></div>
 <div aria-label="Informe epidemiológico de la jornada" class="report-document">
 <div id="reportPreview" role="document"><div class="report-placeholder">Preparando reporte institucional…</div></div>
-<div class="report-bottom-note">Los indicadores de participación no permiten estimar prevalencia de tabaquismo ni evaluar diagnósticos. El informe no incluye nombres ni correos de asistentes.</div>
+
 <div class="report-editor-overlay" hidden="" id="reportEditorOverlay" role="presentation"><div aria-labelledby="editorTitle" aria-modal="true" class="report-editor-modal" role="dialog"><div class="report-editor-top"><div><small>EDICIÓN PRIVADA</small><h2 id="editorTitle">Editor del reporte epidemiológico</h2><p>Edita el documento por apartados y guarda los cambios. El informe se presenta sin casillas ni campos vacíos.</p></div><button class="secondary" id="closeReportEditor" type="button">Cerrar ✕</button></div><div aria-live="polite" class="report-editor-status" id="reportEditorStatus" role="status"></div>
 <section class="panel epi-report" id="epiReportSection">
 <div class="epi-head"><div><h2>Reporte epidemiológico de la jornada</h2><p class="epi-sub">Informe descriptivo final · 17 de noviembre de 2026 · Solo para administración</p></div></div>
