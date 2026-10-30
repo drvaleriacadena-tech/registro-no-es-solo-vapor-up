@@ -779,7 +779,7 @@ function drawHealth(p){
  const selector=$('h_tobaccoEver'),question=selector.previousElementSibling;
  eligibility.append(question,selector);
  // El antecedente ya se pregunta en las 5 preguntas; no se vuelve a mostrar.
- eligibility.hidden=true;selector.required=false;root.append(eligibility);
+ eligibility.hidden=true;eligibility.style.setProperty('display','none','important');selector.required=false;$('tobaccoPageSlot').append(eligibility);
  // Para colaboradores, la primera pregunta del cuestionario ya documenta
  // el antecedente de cigarrillos; evitar repetirla y reutilizar su respuesta.
  if(group==='Colaborador'||group==='Alumno'||group==='General'){
