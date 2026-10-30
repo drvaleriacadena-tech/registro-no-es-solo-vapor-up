@@ -564,6 +564,29 @@ body{background:radial-gradient(ellipse at 90% -10%,rgba(202,190,164,.14),transp
 .pdf-rectoria .vacc-track i{display:block;height:100%;background:#175277}
 .pdf-rectoria .vacc-two{display:grid;grid-template-columns:1fr 1fr;gap:20px}
 @media(max-width:700px){#console-reporte #reportPreview .vacc-kpis{grid-template-columns:repeat(2,1fr)}#console-reporte #reportPreview .vacc-two{grid-template-columns:1fr}#console-reporte #reportPreview .vacc-bar{grid-template-columns:100px 1fr 25px 45px}#console-reporte #reportPreview .vacc-section{padding:22px!important}}
+
+/* Primera página ejecutiva compacta y evidencia con tamaño controlado en PDF */
+.pdf-rectoria .vacc-cover{height:320px!important;min-height:0!important;padding:17px 32px!important;overflow:hidden!important}
+.pdf-rectoria .vacc-cover .rp-logos{margin-bottom:11px!important;padding-bottom:8px!important}
+.pdf-rectoria .vacc-cover .rp-logos img{height:54px!important}
+.pdf-rectoria .vacc-cover h1{font-size:33px!important;margin:4px 0!important}
+.pdf-rectoria .vacc-cover .rp-subtitle{font-size:16px!important;margin:4px 0 12px!important}
+.pdf-rectoria .vacc-meta{margin-top:9px!important;display:grid!important;grid-template-columns:repeat(3,1fr)!important;gap:12px!important;font-size:12px!important}
+.pdf-rectoria .vacc-meta small{display:block!important;margin-bottom:3px!important}
+.pdf-rectoria .vacc-hero{padding:18px 32px!important;min-height:90px!important}
+.pdf-rectoria .vacc-hero strong{font-size:35px!important}
+.pdf-rectoria .vacc-section{padding:17px 32px!important}
+.pdf-rectoria .vacc-title{margin-bottom:12px!important;display:flex!important;align-items:center!important;gap:13px!important}
+.pdf-rectoria .vacc-title h2{font:700 23px Georgia,serif!important;color:#173b55!important;margin:2px 0!important}
+.pdf-rectoria .vacc-number{width:32px;height:32px;display:grid;place-items:center;border-radius:50%;color:#9f1851;background:#faedf1;font-weight:800}
+.pdf-rectoria .vacc-card strong{font:700 27px Georgia,serif!important;display:block!important;color:#143b58!important}
+.pdf-rectoria .vacc-card small,.pdf-rectoria .vacc-card span{display:block!important;font-size:10px!important}
+.pdf-rectoria .vacc-photo-grid{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:12px!important}
+.pdf-rectoria .vacc-photo-grid figure{margin:0!important}
+.pdf-rectoria .vacc-photo-grid img{display:block!important;width:100%!important;height:170px!important;object-fit:cover!important}
+.pdf-rectoria .vacc-signature{display:grid!important;grid-template-columns:repeat(2,1fr)!important;gap:18px!important}
+.pdf-rectoria .vacc-signature small,.pdf-rectoria .vacc-signature span,.pdf-rectoria .vacc-signature strong{display:block!important}
+
 </style>
 <style id="vapor-pages-and-report-styles">
 /* Separate screens, never a long combined public/admin document. */
@@ -1255,13 +1278,11 @@ async function epiExport(){
     const canvas=await html2canvas(section,{backgroundColor:'#ffffff',scale:1.7,useCORS:true,logging:false,scrollX:0,scrollY:0,windowWidth:950});
     const height=canvas.height/canvas.width*contentW;
     if(cover){
-      const coverH=Math.min(height,194);
-      pdf.addImage(canvas.toDataURL('image/jpeg',.93),'JPEG',mx,26,contentW,coverH);
-      pdf.setDrawColor(185,155,98);pdf.setLineWidth(.7);pdf.line(mx,237,pw-mx,237);
-      pdf.setFont('helvetica','normal');pdf.setTextColor(64,80,70);pdf.setFontSize(10);
-      pdf.text('DOCUMENTO DE USO INSTITUCIONAL',mx,247);
-      pdf.setFontSize(9);pdf.text('Medicina de Campus  ·  Universidad Panamericana',mx,254);
-      nextPage();return;
+      // Portada editorial compacta: permitir resultados e indicadores en la misma primera hoja.
+      const coverH=Math.min(height,79);
+      pdf.addImage(canvas.toDataURL('image/jpeg',.95),'JPEG',mx,y,contentW,coverH);
+      y+=coverH+5;
+      return;
     }
     if(height <= bottom-my && y+height>bottom)nextPage();
     let consumed=0;
