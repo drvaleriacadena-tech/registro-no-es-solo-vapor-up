@@ -734,7 +734,7 @@ const healthQuestions={
  ['ever','¿Alguna vez has utilizado vapeadores o cigarrillos electrónicos?',['Sí','No','Prefiero no responder']],
  ['recent','En los últimos 30 días, ¿cuántos días utilizaste un vapeador?',['0 días','1–2 días','3–5 días','6–9 días','10–19 días','20–29 días','30 días','Prefiero no responder']],
  ['start','¿A qué edad los utilizaste por primera vez?',['Nunca','Menos de 15 años','15–17 años','18–20 años','21 años o más','Prefiero no responder']],
- ['nic','¿Sabes si el producto utilizado contenía nicotina?',['Sí','No','No sé','No aplica','Prefiero no responder']],
+ ['cigEver','¿Alguna vez has fumado cigarrillos convencionales?',['Sí','No','Prefiero no responder']],
  ['emotion','¿Has sentido ganas de fumar o vapear ante alguna de estas emociones o situaciones?',['Estrés o presión académica/laboral','Ansiedad o nerviosismo','Tristeza o soledad','Aburrimiento','Convivencia o presión social','No he relacionado mis emociones con fumar o vapear','Nunca he fumado ni vapeado','Prefiero no responder']]
  ],
  Colaborador:[
@@ -772,10 +772,10 @@ function drawHealth(p){
  eligibility.append(question,selector);root.append(eligibility);
  // Para colaboradores, la primera pregunta del cuestionario ya documenta
  // el antecedente de cigarrillos; evitar repetirla y reutilizar su respuesta.
- if(group==='Colaborador'){
+ if(group==='Colaborador'||group==='Alumno'){
   eligibility.hidden=true;
   selector.required=false;
-  const firstAnswer=$('h_ever');
+  const firstAnswer=$(group==='Alumno'?'h_cigEver':'h_ever');
   const syncTobacco=()=>{
    selector.value=firstAnswer.value;
    selector.dispatchEvent(new Event('change',{bubbles:false}));
