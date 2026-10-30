@@ -433,6 +433,31 @@ body{background:radial-gradient(ellipse at 90% -10%,rgba(202,190,164,.14),transp
 @media(max-width:950px){.console-layout{grid-template-columns:240px minmax(0,1fr)}.console-sidebar{padding:20px 10px}.console-nav-btn{font-size:12px}}
 @media(max-width:620px){.console-layout{display:block}.console-menu{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px}.menu-section-label{grid-column:1/-1}.console-sidefoot{display:none}.console-nav-btn{min-height:47px;font-size:11px;gap:6px}.console-nav-btn.report-menu-btn{min-height:68px}}
 
+/* Documento epidemiológico institucional: independiente del tablero de análisis */
+#reportPreview{max-width:850px;margin:20px auto;background:#fff;box-shadow:0 18px 60px rgba(24,55,38,.12);border:1px solid #e3e9e1;border-radius:7px;overflow:hidden}
+#reportPreview .rp-cover{padding-top:58px;padding-bottom:54px}
+#reportPreview .rp-block{padding:36px 46px;break-inside:avoid-page}
+#reportPreview .rp-section-title{margin-bottom:22px}
+#reportPreview .rp-section-title h2{line-height:1.2}
+#reportPreview .rp-formal-chart{border:1px solid #e3e9e1;border-radius:12px;margin:18px 0;padding:21px 22px;break-inside:avoid}
+#reportPreview .rp-formal-chart h3{font-size:17px;margin:0 0 18px}
+#reportPreview .rp-formal-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:20px 0}
+#reportPreview .rp-formal-mini{background:#f3f7f1;border-radius:10px;padding:15px;text-align:center}
+#reportPreview .rp-formal-mini strong{display:block;font-size:23px;color:#28563a}
+#reportPreview .rp-formal-mini span{font-size:12px;color:#536955}
+#reportPreview .rp-prose{line-height:1.75}
+@media print{
+ @page{size:A4;margin:15mm}
+ body.print-epi #epiPrint .rp-export{max-width:none!important;box-shadow:none!important}
+ body.print-epi .rp-block{break-inside:auto!important;page-break-inside:auto!important}
+ body.print-epi .rp-cover{break-after:page;page-break-after:always}
+ body.print-epi .rp-formal-chart,body.print-epi .rp-chart,body.print-epi .rp-kpis,body.print-epi .rp-two,body.print-epi .rp-photo{break-inside:avoid;page-break-inside:avoid}
+ body.print-epi .rp-formal-mini{break-inside:avoid}
+}
+
+
+/* Documento final separado del tablero estadístico */
+.epi-final-guide{background:#f3f7f2;border:1px solid #dce8dd;border-left:4px solid #597d62;border-radius:12px;padding:18px 22px;margin:0 0 24px;color:#304d3a;font-size:13px;line-height:1.65}.epi-final-guide strong{letter-spacing:.05em}.epi-final-guide p{margin:8px 0}.report-analysis-intro{margin:26px 0 14px}.report-analysis-intro h3{font:500 24px Georgia,serif;margin:0 0 5px}.report-analysis-intro p{font-size:13px;color:#68776b}.analytics-v4{margin:16px 0 24px}.report-document{display:block}
 </style>
 <style id="vapor-pages-and-report-styles">
 /* Separate screens, never a long combined public/admin document. */
@@ -681,6 +706,12 @@ body.print-epi #epiPrint .rp-signature{padding:18px 0}
 <div class="stats-summary"><div><small>Alcance registrado</small><strong id="statsReach">—</strong></div><div><small>Asistencia efectiva</small><strong id="statsAttendance">—</strong></div><div><small>Porcentaje de asistencia</small><strong id="statsRate">—</strong></div></div>
 <section class="panel" style="padding:20px;margin:18px 0"><h3>Distribución de registros por edad</h3><p class="muted">Edad calculada desde la fecha de nacimiento. Los registros anteriores pueden aparecer sin edad.</p><div id="ageStats">Sin datos disponibles</div></section><div class="admin-duo"><section class="panel"><h3>Participantes por perfil</h3><div class="muted" id="profileBars">Sin datos cargados</div></section><section class="panel"><h3>Inscripciones por actividad</h3><div class="muted" id="activityBars">Sin datos cargados</div></section></div><div class="admin-duo extra-charts"><section class="panel"><h3>Alumnos por facultad</h3><div class="muted" id="facultyBars">Sin datos cargados</div></section><section class="panel"><h3>Asistencia por perfil</h3><div class="muted" id="attendanceBars">Sin datos cargados</div></section></div>
 <div class="notice-yellow"><strong>Nota metodológica.</strong> La inscripción en una actividad no demuestra que la persona haya completado esa estación. Para medirlo se necesitaría un registro específico por actividad.</div>
+<div class="report-analysis-intro"><h3>Tablero analítico de salud respiratoria</h3><p>Distribución descriptiva de las encuestas, preguntas y exposición al tabaco. Filtra por perfil y edad. Los resultados representan únicamente a quienes respondieron.</p></div>
+<section class="analytics-v4 no-print" id="analyticsV4">
+<div style="font-size:12px;letter-spacing:2px;font-weight:700;color:#60816e">CENTRO DE ANÁLISIS · SALUD RESPIRATORIA</div>
+<h3>Reporte analítico integral</h3><p class="muted">Datos agregados de inscripciones y respuestas voluntarias. Sin datos personales en las estadísticas de salud.</p>
+<div class="v4-filters"><label>Perfil de encuesta<select id="v4Profile"><option value="">Todos los perfiles</option><option>Alumno</option><option>Colaborador</option><option>Familiar</option><option>Alumni</option><option>Jubilado</option><option>Externo</option></select></label><label>Rango de edad (registros)<select id="v4Age"><option value="">Todas las edades</option><option value="0-18">Menores de 18</option><option value="18-25">18–24</option><option value="25-35">25–34</option><option value="35-45">35–44</option><option value="45-55">45–54</option><option value="55-65">55–64</option><option value="65-200">65 o más</option></select></label><button class="secondary" id="v4Refresh" type="button">↻ Actualizar análisis</button></div>
+<div id="v4Status" class="muted" role="status">Abre el reporte y actualiza para cargar las estadísticas.</div><div id="v4Content"></div></section>
 </section>
 <section class="console-page" hidden="" id="console-evidencias">
 <div class="module-head"><div><h3>Evidencia fotográfica</h3><p>Sube imágenes del evento con una descripción; se almacenan en una carpeta privada de Supabase.</p></div><span class="module-chip" id="photoCount">0 fotografías</span></div>
@@ -690,41 +721,16 @@ body.print-epi #epiPrint .rp-signature{padding:18px 0}
 <style>
 .analytics-v4{background:#f6f8f5;border:1px solid #dce5dc;border-radius:18px;padding:18px;margin:18px 0;color:#244234}.analytics-v4 h3{font:700 25px Georgia,serif;margin:4px 0 8px}.analytics-v4 .v4-filters{display:flex;flex-wrap:wrap;gap:12px;align-items:end;margin:15px 0}.analytics-v4 .v4-filters label{display:grid;gap:5px;flex:1;min-width:155px;font-size:12px;font-weight:bold}.analytics-v4 select{padding:10px;background:white;border:1px solid #c4d1c5;border-radius:9px;width:100%}.analytics-v4 .v4-kpi{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:10px;margin:12px 0}.analytics-v4 .v4-kpi>div{background:white;padding:13px;border-radius:12px;border:1px solid #dfe6dc}.analytics-v4 .v4-kpi strong{display:block;font-size:26px}.analytics-v4 .v4-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}.analytics-v4 .v4-chart{background:white;border:1px solid #dce5dc;padding:15px;border-radius:13px}.analytics-v4 .v4-chart h4{font-size:15px;margin:0 0 13px}.analytics-v4 .v4-bar{display:grid;grid-template-columns:minmax(105px,1.15fr) minmax(55px,2fr) 38px;align-items:center;gap:8px;margin:9px 0;font-size:12px}.analytics-v4 .v4-track{height:12px;background:#e9efe9;border-radius:15px;overflow:hidden}.analytics-v4 .v4-track i{display:block;background:#588970;height:100%;border-radius:15px}.analytics-v4 .v4-bar b{text-align:right}.analytics-v4 .v4-note{font-size:12px;color:#586a5b;line-height:1.5}.rp-analytics-v4 .v4-grid{grid-template-columns:repeat(2,minmax(0,1fr))}@media(max-width:650px){.rp-analytics-v4 .v4-grid{grid-template-columns:1fr}}
 </style>
-<div class="module-head report-top-head"><div><div class="tinytitle">DOCUMENTO INSTITUCIONAL · SALUD PÚBLICA</div><h3>Reporte epidemiológico de la jornada</h3><p>Informe descriptivo de alcance y participación. Actualizado con los registros del sistema.</p></div><span class="module-chip">Documento, no formulario</span></div>
-<section class="analytics-v4 no-print" id="analyticsV4">
-<div style="font-size:12px;letter-spacing:2px;font-weight:700;color:#60816e">CENTRO DE ANÁLISIS · SALUD RESPIRATORIA</div>
-<h3>Reporte analítico integral</h3><p class="muted">Datos agregados de inscripciones y respuestas voluntarias. Sin datos personales en las estadísticas de salud.</p>
-<div class="v4-filters"><label>Perfil de encuesta<select id="v4Profile"><option value="">Todos los perfiles</option><option>Alumno</option><option>Colaborador</option><option>Familiar</option><option>Alumni</option><option>Jubilado</option><option>Externo</option></select></label><label>Rango de edad (registros)<select id="v4Age"><option value="">Todas las edades</option><option value="0-18">Menores de 18</option><option value="18-25">18–24</option><option value="25-35">25–34</option><option value="35-45">35–44</option><option value="45-55">45–54</option><option value="55-65">55–64</option><option value="65-200">65 o más</option></select></label><button class="secondary" id="v4Refresh" type="button">↻ Actualizar análisis</button></div>
-<div id="v4Status" class="muted" role="status">Abre el reporte y actualiza para cargar las estadísticas.</div><div id="v4Content"></div></section>
+<div class="epi-final-guide"><strong>INFORME EPIDEMIOLÓGICO INTEGRAL</strong><p>Informe institucional único: participación, cobertura de encuestas, análisis de las preguntas de salud respiratoria, exposición al tabaco, interpretación médica, limitaciones y recomendaciones para 2027. Los apartados narrativos pueden editarse desde «Editar informe».</p><p><strong>Nota metodológica:</strong> la muestra es voluntaria y no representativa de toda la universidad; los porcentajes de consumo no deben presentarse como prevalencia institucional ni como diagnósticos.</p></div><div class="module-head report-top-head"><div><div class="tinytitle">DOCUMENTO INSTITUCIONAL · SALUD PÚBLICA</div><h3>Reporte epidemiológico de la jornada</h3><p>Informe descriptivo de alcance y participación. Actualizado con los registros del sistema.</p></div><span class="module-chip">Documento, no formulario</span></div>
+
 <div class="report-page-actions no-print"><button class="primary" id="enableInlineEdit" type="button">✎ Editar informe completo</button>
 <button class="secondary" id="openReportEditor" type="button">Editar por apartados</button>
 <button class="secondary" id="reportEvidence" type="button">▧ Agregar fotografías</button>
 <button class="secondary" id="previewRefresh" type="button">↻ Actualizar cifras</button>
 <button class="primary" id="reportDownload" type="button">⇩ Descargar / imprimir PDF</button>
 </div><div aria-live="polite" class="report-action-status no-print" id="reportActionStatus" role="status"></div><div class="report-inline-help no-print" hidden="" id="reportInlineHelp">Modo edición activado. Haz clic en cualquier texto marcado para modificarlo. Las cifras automáticas no se pueden editar.<div class="report-inline-bar" id="reportInlineBar"><button class="primary" id="saveInlineReport" type="button">Guardar cambios</button><button class="secondary" id="cancelInlineReport" type="button">Cancelar edición</button></div></div>
-<div aria-label="Informe epidemiológico de la jornada" class="report-document" <style>
-/* Documento epidemiológico institucional: independiente del tablero de análisis */
-#reportPreview{max-width:850px;margin:20px auto;background:#fff;box-shadow:0 18px 60px rgba(24,55,38,.12);border:1px solid #e3e9e1;border-radius:7px;overflow:hidden}
-#reportPreview .rp-cover{padding-top:58px;padding-bottom:54px}
-#reportPreview .rp-block{padding:36px 46px;break-inside:avoid-page}
-#reportPreview .rp-section-title{margin-bottom:22px}
-#reportPreview .rp-section-title h2{line-height:1.2}
-#reportPreview .rp-formal-chart{border:1px solid #e3e9e1;border-radius:12px;margin:18px 0;padding:21px 22px;break-inside:avoid}
-#reportPreview .rp-formal-chart h3{font-size:17px;margin:0 0 18px}
-#reportPreview .rp-formal-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:20px 0}
-#reportPreview .rp-formal-mini{background:#f3f7f1;border-radius:10px;padding:15px;text-align:center}
-#reportPreview .rp-formal-mini strong{display:block;font-size:23px;color:#28563a}
-#reportPreview .rp-formal-mini span{font-size:12px;color:#536955}
-#reportPreview .rp-prose{line-height:1.75}
-@media print{
- @page{size:A4;margin:15mm}
- body.print-epi #epiPrint .rp-export{max-width:none!important;box-shadow:none!important}
- body.print-epi .rp-block{break-inside:auto!important;page-break-inside:auto!important}
- body.print-epi .rp-cover{break-after:page;page-break-after:always}
- body.print-epi .rp-formal-chart,body.print-epi .rp-chart,body.print-epi .rp-kpis,body.print-epi .rp-two,body.print-epi .rp-photo{break-inside:avoid;page-break-inside:avoid}
- body.print-epi .rp-formal-mini{break-inside:avoid}
-}
-</style><div id="reportPreview" role="document"><div class="report-placeholder">Preparando reporte institucional…</div></div>
+<div aria-label="Informe epidemiológico de la jornada" class="report-document">
+<div id="reportPreview" role="document"><div class="report-placeholder">Preparando reporte institucional…</div></div>
 <div class="report-bottom-note">Los indicadores de participación no permiten estimar prevalencia de tabaquismo ni evaluar diagnósticos. El informe no incluye nombres ni correos de asistentes.</div>
 <div class="report-editor-overlay" hidden="" id="reportEditorOverlay" role="presentation"><div aria-labelledby="editorTitle" aria-modal="true" class="report-editor-modal" role="dialog"><div class="report-editor-top"><div><small>EDICIÓN PRIVADA</small><h2 id="editorTitle">Editor del reporte epidemiológico</h2><p>Edita el documento por apartados y guarda los cambios. El informe se presenta sin casillas ni campos vacíos.</p></div><button class="secondary" id="closeReportEditor" type="button">Cerrar ✕</button></div><div aria-live="polite" class="report-editor-status" id="reportEditorStatus" role="status"></div>
 <section class="panel epi-report" id="epiReportSection">
